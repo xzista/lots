@@ -1,15 +1,28 @@
-[project]
+[tool.poetry]
 name = "project8"
 version = "0.1.0"
-description = ""
-authors = [
-    {name = "Your Name",email = "you@example.com"}
-]
+description = "Django Antiques"
+authors = ["Xziste <17alexdmz99@gmail.com>"]
 readme = "README.md"
-requires-python = ">=3.13"
-dependencies = [
-]
+package-mode = false
 
+[tool.poetry.dependencies]
+python = "^3.13"
+django = "^6.0"
+gunicorn = "^23.0.0"
+ipython = "^9.8.0"
+pillow = "^12.0.0"
+psycopg2-binary = "^2.9.11"
+
+[tool.poetry.group.dev.dependencies]
+python-dotenv = "^1.2.1"
+
+
+
+[tool.poetry.group.lint.dependencies]
+flake8 = "^7.3.0"
+isort = "^7.0.0"
+black = "^25.11.0"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
