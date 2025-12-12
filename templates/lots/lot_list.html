@@ -18,17 +18,18 @@
 <div class="row mb-3">
   <div class="col-12">
     <div class="d-flex flex-wrap gap-2">
-      <a href="{% url 'lots:list' %}" class="tag">Все</a>
+      <a href="{% url 'lots:lot_list' %}" class="tag">Все</a>
       {% for cat in site_categories %}
-        <a href="?category={{ cat|urlencode }}" class="tag {% if search_category==cat %}border-2{% endif %}">{{ cat }}</a>
+        <a href="?category={{ cat|urlencode }}" class="tag {% if selected_category == cat %}border-2{% endif %}">{{ cat }}</a>
       {% endfor %}
+
+      {# Отображаем теги только из первого лота #}
       {% if page_obj.object_list %}
-        {% for lot in page_obj.object_list %}
-          {% for t in lot.tags_list %}
+        {% with first_lot=page_obj.object_list.0 %}
+          {% for t in first_lot.tags_list %}
             <a href="?tag={{ t|urlencode }}" class="tag">{{ t }}</a>
           {% endfor %}
-          {% break %}
-        {% endfor %}
+        {% endwith %}
       {% endif %}
     </div>
   </div>
@@ -46,26 +47,28 @@
         <p class="card-text text-truncate" style="max-height:3.6rem;">{{ lot.description }}</p>
         <div class="mt-auto d-flex justify-content-between align-items-center">
           <small class="text-muted">{{ lot.created_at|date:"d.m.Y" }}</small>
-          <a href="{% url 'lots:detail' lot.pk %}" class="btn btn-sm btn-outline-dark">Открыть</a>
+          <a href="{% url 'lots:lot_detail' lot.pk %}" class="btn btn-sm btn-outline-dark">Открыть</a>
         </div>
       </div>
     </div>
   </div>
   {% empty %}
-    <p class="text-muted">Лоты не найдены.</p>
+  <div class="col-12">
+    <p class="text-muted text-center">Лоты не найдены.</p>
+  </div>
   {% endfor %}
 </div>
 
 <nav class="mt-4">
   <ul class="pagination">
     {% if page_obj.has_previous %}
-      <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}">←</a></li>
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if selected_tag %}&tag={{ selected_tag }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">←</a></li>
     {% else %}
       <li class="page-item disabled"><span class="page-link">←</span></li>
     {% endif %}
     <li class="page-item disabled"><span class="page-link">Стр. {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
     {% if page_obj.has_next %}
-      <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}">→</a></li>
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if selected_tag %}&tag={{ selected_tag }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">→</a></li>
     {% else %}
       <li class="page-item disabled"><span class="page-link">→</span></li>
     {% endif %}

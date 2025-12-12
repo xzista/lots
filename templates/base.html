@@ -1,0 +1,67 @@
+<!-- templates/base.html -->
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Антикварные лоты{% endblock %}</title>
+
+  <!-- Bootstrap CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Антикварный шрифт (Google fonts) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Libre+Franklin:wght@300;400&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Libre Franklin', Arial, sans-serif;
+      background: #f7f3ee; /* бумажный фон */
+      color: #2b2b2b;
+    }
+    .antique-header {
+      font-family: 'Playfair Display', serif;
+      letter-spacing: 1px;
+      color: #2d1f14;
+    }
+    .card.antique {
+      background: linear-gradient(180deg, #fffdf9 0%, #f6efe6 100%);
+      border: 1px solid #d6c8b2;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      border-radius: 12px;
+    }
+    .tag {
+      background: rgba(45,31,20,0.06);
+      border: 1px solid rgba(45,31,20,0.08);
+      padding: 4px 8px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+    }
+    footer { margin-top: 40px; padding: 20px 0; text-align: center; color: #6b5a49; }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light" style="background:#efe5d8;">
+  <div class="container">
+    <a class="navbar-brand antique-header" href="{% url 'lots:lot_list' %}" style="font-size:1.4rem;">Антикварные лоты</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+  </div>
+</nav>
+
+<main class="container py-4">
+  {% block content %}{% endblock %}
+</main>
+
+<footer>
+  <div class="container">
+    <small>© Антикварные лоты</small>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>
