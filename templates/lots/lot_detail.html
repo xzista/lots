@@ -8,39 +8,41 @@
   <div class="col-md-6">
     <div class="card antique p-2">
 
-      <!-- ГАЛЕРЕЯ — теперь 100% корректная -->
-      <div id="gallery" class="d-flex flex-column gap-2">
+      <!-- ГАЛЕРЕЯ -->
+      <div id="lightgallery" class="d-flex flex-column gap-2">
 
         <!-- Большое главное фото -->
         {% if lot.main_image %}
         <a href="{{ lot.main_image.url }}"
-           data-src="{{ lot.main_image.url }}"
-           class="gallery-item">
+           class="gallery-main"
+           data-lg-size="{{ lot.main_image.width }}-{{ lot.main_image.height }}"
+           style="display: block; overflow: hidden; border-radius: 8px;">
           <img src="{{ lot.main_image.url }}"
-               class="img-fluid rounded"
-               style="max-height:420px; object-fit:contain;">
+               alt="{{ lot.title }}"
+               style="width: 100%; height: auto; max-height: 500px; object-fit: contain; display: block;">
         </a>
         {% endif %}
 
-        <!-- Миниатюры -->
-        <div class="d-flex flex-wrap gap-2">
-        {% for img in lot.images.all %}
+        <!-- Миниатюры (если есть дополнительные изображения) -->
+        {% if lot.images.all %}
+        <div class="d-flex flex-wrap gap-2 mt-3">
+          {% for img in lot.images.all %}
           <a href="{{ img.image.url }}"
-             data-src="{{ img.image.url }}"
-             class="gallery-item"
-             data-lg-size="1600-1200">
+             class="gallery-thumb"
+             style="display: block;"
+             data-lg-size="{{ img.image.width }}-{{ img.image.height }}">
             <img src="{{ img.image.url }}"
-                 style="width:120px; height:120px; object-fit:cover;"
-                 class="rounded">
+                 alt="{{ lot.title }} - изображение {{ forloop.counter }}"
+                 style="width: 100px; height: 100px; object-fit: cover; border-radius: 6px;">
           </a>
-        {% endfor %}
+          {% endfor %}
         </div>
+        {% endif %}
 
       </div>
 
     </div>
   </div>
-
 
   <div class="col-md-6">
     <div class="card antique p-4">
@@ -50,16 +52,15 @@
       <article>{{ lot.description|linebreaks }}</article>
 
       {% if lot.tags_list %}
-        <div class="mt-3">
-          {% for t in lot.tags_list %}
-            <span class="tag me-1">{{ t }}</span>
-          {% endfor %}
-        </div>
+      <div class="mt-3">
+        {% for t in lot.tags_list %}
+        <span class="tag me-1">{{ t }}</span>
+        {% endfor %}
+      </div>
       {% endif %}
 
       <button onclick="location.href='{% url 'lots:lot_list' %}'"
               class="btn btn-outline-dark mt-3">Назад</button>
-
     </div>
   </div>
 
@@ -68,18 +69,67 @@
 
 {% block extra_js %}
 <script>
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", function() {
 
-  // LightGallery ИНИЦИАЛИЗАЦИЯ (правильная!)
-  lightGallery(document.getElementById("gallery"), {
-    selector: ".gallery-item",
+  // Инициализация LightGallery
+  const gallery = lightGallery(document.getElementById('lightgallery'), {
+    selector: 'a[href$=".jpg"], a[href$=".jpeg"], a[href$=".png"], a[href$=".gif"], a[href$=".webp"]',
     plugins: [lgZoom, lgThumbnail],
+    speed: 300,
     zoom: true,
     thumbnail: true,
-    speed: 300,
+    download: false,
+
+    // Улучшенные настройки для мобильных устройств
     mobileSettings: {
       controls: true,
-      showCloseIcon: true
+      showCloseIcon: true,
+      download: false
+    },
+
+    // Настройки для десктопов
+    controls: true,
+    closeOnTap: true,
+    hideBarsDelay: 3000,
+
+    // Настройки масштабирования
+    scale: 1,
+    actualSize: false,
+    showZoomInOutIcons: true,
+    actualSizeIcons: {
+      zoomIn: 'lg-zoom-in',
+      zoomOut: 'lg-zoom-out'
+    },
+
+    // Плавная анимация
+    mode: 'lg-fade',
+    cssEasing: 'cubic-bezier(0.25, 0, 0.25, 1)',
+
+    // Предотвращение растягивания
+    preload: 1,
+    appendSubHtmlTo: '.lg-item'
+  });
+
+  // Предотвращаем скачок изображения при загрузке
+  const images = document.querySelectorAll('#lightgallery img');
+  images.forEach(img => {
+    // Устанавливаем фиксированные размеры для предотвращения скачков
+    if (!img.style.width) {
+      img.style.width = '100%';
+    }
+    if (!img.style.height) {
+      img.style.height = 'auto';
+    }
+
+    // Предзагрузка изображения
+    if (img.complete) {
+      img.style.opacity = '1';
+    } else {
+      img.style.opacity = '0';
+      img.style.transition = 'opacity 0.3s ease';
+      img.onload = function() {
+        this.style.opacity = '1';
+      };
     }
   });
 
