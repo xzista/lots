@@ -2,40 +2,54 @@
 {% block title %}{{ lot.title }} — Лот{% endblock %}
 
 {% block content %}
-<div class="row">
+
+<div class="row g-4">
+
+  <!-- Галерея -->
   <div class="col-md-6">
-    <div class="card antique">
-      {% if lot.image %}
-        <img src="{{ lot.image.url }}" class="card-img-top" style="object-fit:contain; height:420px;">
+    <div class="card antique p-2">
+
+      {% if lot.main_image %}
+        <a href="{{ lot.main_image.url }}" class="glightbox" data-gallery="lot-gallery">
+            <img src="{{ lot.main_image.url }}" class="img-fluid rounded">
+        </a>
       {% endif %}
-      <div class="card-body">
-        <h2 class="antique-header">{{ lot.title }}</h2>
-        <p class="text-muted">Добавлен: {{ lot.created_at|date:"d.m.Y H:i" }}</p>
-        <p>{{ lot.description|linebreaks }}</p>
-        {% if lot.tags_list %}
-          <div class="mt-3">
-            <strong>Теги:</strong>
-            {% for t in lot.tags_list %}
-              <span class="tag me-1">{{ t }}</span>
-            {% endfor %}
-          </div>
-        {% endif %}
-      </div>
+
+      {% if lot.images.all %}
+        <div class="row mt-3 g-2">
+          {% for img in lot.images.all %}
+            <div class="col-4">
+              <a href="{{ img.image.url }}" class="glightbox" data-gallery="lot-gallery">
+                <img src="{{ img.image.url }}" class="img-fluid rounded shadow-sm">
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
     </div>
   </div>
 
+  <!-- Описание -->
   <div class="col-md-6">
-    <div class="card antique p-3">
-      <h5 class="antique-header">Информация</h5>
-      <dl class="row">
-        <dt class="col-sm-4">Категория</dt>
-        <dd class="col-sm-8">{{ lot.category|default:"—" }}</dd>
+    <div class="card antique p-4">
+      <h2 class="antique-header">{{ lot.title }}</h2>
+      <p class="text-muted">{{ lot.created_at|date:"d.m.Y" }}</p>
 
-        <dt class="col-sm-4">Статус</dt>
-        <dd class="col-sm-8">{% if lot.is_active %}Активен{% else %}Неактивен{% endif %}</dd>
-      </dl>
-      <a href="{% url 'lots:lot_list' %}" class="btn btn-outline-dark">Вернуться к списку</a>
+      <article>{{ lot.description|linebreaks }}</article>
+
+      {% if lot.tags_list %}
+        <div class="mt-3">
+          {% for t in lot.tags_list %}
+            <span class="tag me-1">{{ t }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <a href="{% url 'lots:lot_list' %}" class="btn btn-outline-dark mt-3">Назад</a>
+
     </div>
   </div>
+
 </div>
+
 {% endblock %}

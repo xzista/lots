@@ -11,33 +11,46 @@
 
   <!-- Антикварный шрифт (Google fonts) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Libre+Franklin:wght@300;400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Libre+Franklin:wght@300;400&display=swap"
+        rel="stylesheet">
+  <!-- Галерея (несколько фото) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css">
+
 
   <style>
     body {
       font-family: 'Libre Franklin', Arial, sans-serif;
-      background: #f7f3ee; /* бумажный фон */
-      color: #2b2b2b;
+      background: var(--bg);
+      color: var(--text);
     }
-    .antique-header {
-      font-family: 'Playfair Display', serif;
-      letter-spacing: 1px;
-      color: #2d1f14;
+
+    :root {
+      --bg: #f7f3ee;
+      --text: #2b2b2b;
+      --card-bg: #fffdf9;
+      --card-border: #d6c8b2;
     }
+
+    body.dark {
+      --bg: #121212;
+      --text: #f1f1f1;
+      --card-bg: #1d1d1d;
+      --card-border: #333;
+    }
+
     .card.antique {
-      background: linear-gradient(180deg, #fffdf9 0%, #f6efe6 100%);
-      border: 1px solid #d6c8b2;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
       border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
     }
+
     .tag {
-      background: rgba(45,31,20,0.06);
-      border: 1px solid rgba(45,31,20,0.08);
-      padding: 4px 8px;
-      border-radius: 10px;
+      background: rgba(80,60,40,0.08);
+      padding: 4px 10px;
+      border-radius: 12px;
       font-size: 0.85rem;
     }
-    footer { margin-top: 40px; padding: 20px 0; text-align: center; color: #6b5a49; }
   </style>
   {% block extra_head %}{% endblock %}
 </head>
@@ -49,6 +62,40 @@
       <span class="navbar-toggler-icon"></span>
     </button>
   </div>
+  <button id="themeToggle" class="btn btn-sm btn-outline-dark ms-auto">🌙</button>
+
+<style>
+  body.dark {
+      background: #121212 !important;
+      color: #e6e6e6 !important;
+  }
+  body.dark .card.antique {
+      background: #1c1c1c;
+      border-color: #333;
+  }
+  body.dark .navbar {
+      background: #222 !important;
+  }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const body = document.body;
+    const btn = document.getElementById("themeToggle");
+
+    if (localStorage.getItem("theme") === "dark") {
+        body.classList.add("dark");
+        btn.textContent = "☀️";
+    }
+
+    btn.addEventListener("click", () => {
+        body.classList.toggle("dark");
+        const isDark = body.classList.contains("dark");
+        localStorage.setItem("theme", isDark ? "dark" : "light");
+        btn.textContent = isDark ? "☀️" : "🌙";
+    });
+});
+</script>
 </nav>
 
 <main class="container py-4">
@@ -63,5 +110,13 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 {% block extra_js %}{% endblock %}
+<script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
+<script>
+  const lightbox = GLightbox({
+      touchNavigation: true,
+      loop: true,
+      zoomable: true
+  });
+</script>
 </body>
 </html>
