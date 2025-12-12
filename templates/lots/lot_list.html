@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Лоты — Антиквариат{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+  <div class="col-md-9">
+    <h1 class="antique-header">Лоты</h1>
+    <p class="text-muted">Просматривайте, фильтруйте и выбирайте.</p>
+  </div>
+  <div class="col-md-3">
+    <form method="get" class="d-flex">
+      <input type="text" name="q" value="{{ q }}" placeholder="Поиск..." class="form-control me-1" />
+      <button class="btn btn-outline-dark">Найти</button>
+    </form>
+  </div>
+</div>
+
+<div class="row mb-3">
+  <div class="col-12">
+    <div class="d-flex flex-wrap gap-2">
+      <a href="{% url 'lots:list' %}" class="tag">Все</a>
+      {% for cat in site_categories %}
+        <a href="?category={{ cat|urlencode }}" class="tag {% if search_category==cat %}border-2{% endif %}">{{ cat }}</a>
+      {% endfor %}
+      {% if page_obj.object_list %}
+        {% for lot in page_obj.object_list %}
+          {% for t in lot.tags_list %}
+            <a href="?tag={{ t|urlencode }}" class="tag">{{ t }}</a>
+          {% endfor %}
+          {% break %}
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  {% for lot in page_obj %}
+  <div class="col-12 col-sm-6 col-md-4">
+    <div class="card antique h-100">
+      {% if lot.image %}
+      <img src="{{ lot.image.url }}" class="card-img-top" style="object-fit:cover; height:220px;">
+      {% endif %}
+      <div class="card-body d-flex flex-column">
+        <h5 class="card-title antique-header" style="font-size:1.05rem;">{{ lot.title }}</h5>
+        <p class="card-text text-truncate" style="max-height:3.6rem;">{{ lot.description }}</p>
+        <div class="mt-auto d-flex justify-content-between align-items-center">
+          <small class="text-muted">{{ lot.created_at|date:"d.m.Y" }}</small>
+          <a href="{% url 'lots:detail' lot.pk %}" class="btn btn-sm btn-outline-dark">Открыть</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+    <p class="text-muted">Лоты не найдены.</p>
+  {% endfor %}
+</div>
+
+<nav class="mt-4">
+  <ul class="pagination">
+    {% if page_obj.has_previous %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}">←</a></li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">←</span></li>
+    {% endif %}
+    <li class="page-item disabled"><span class="page-link">Стр. {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+    {% if page_obj.has_next %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}">→</a></li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">→</span></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endblock %}
