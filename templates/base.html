@@ -1,101 +1,138 @@
-<!-- templates/base.html -->
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}Антикварные лоты{% endblock %}</title>
 
-  <!-- Bootstrap CDN -->
+  <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <!-- Антикварный шрифт (Google fonts) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Libre+Franklin:wght@300;400&display=swap"
         rel="stylesheet">
-  <!-- Галерея (несколько фото) -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css">
 
+  <!-- LightGallery CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/css/lightgallery-bundle.min.css">
 
   <style>
+    :root{
+      --bg: #f7f3ee;
+      --text: #2b2b2b;
+      --muted: #6b5a49;
+      --card-bg: #fffdf9;
+      --card-border: #d6c8b2;
+      --input-bg: #fff;
+      --input-border: #d6c8b2;
+      --btn-border: #2b2b2b;
+      --placeholder: rgba(0,0,0,0.35);
+    }
+
+    body.dark{
+      --bg: #121212;
+      --text: #efefef;
+      --muted: #b5b5b5;
+      --card-bg: #1d1d1d;
+      --card-border: #333;
+      --input-bg: #222;
+      --input-border: #444;
+      --btn-border: #aaa;
+      --placeholder: rgba(255,255,255,0.55);
+    }
+
     body {
       font-family: 'Libre Franklin', Arial, sans-serif;
       background: var(--bg);
       color: var(--text);
+      margin: 0;
     }
 
-    :root {
-      --bg: #f7f3ee;
-      --text: #2b2b2b;
-      --card-bg: #fffdf9;
-      --card-border: #d6c8b2;
-    }
-
-    body.dark {
-      --bg: #121212;
-      --text: #f1f1f1;
-      --card-bg: #1d1d1d;
-      --card-border: #333;
-    }
+    .antique-header { font-family:'Playfair Display', serif; color:var(--text); }
 
     .card.antique {
       background: var(--card-bg);
+      color: var(--text);
       border: 1px solid var(--card-border);
       border-radius: 12px;
       box-shadow: 0 6px 18px rgba(0,0,0,0.06);
     }
 
-    .tag {
-      background: rgba(80,60,40,0.08);
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-size: 0.85rem;
+    .tag { background: rgba(120,100,80,0.12); border-radius:12px; padding:4px 10px; color:var(--text); text-decoration:none; }
+
+    /* IMPORTANT: don't override all images globally.
+       Use scoped rules for gallery main/thumb images below. */
+    /* Inputs / placeholder */
+    input.form-control, textarea.form-control {
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      color: var(--text);
     }
+    input.form-control::placeholder, textarea.form-control::placeholder {
+      color: var(--placeholder);
+      opacity: 1;
+    }
+    input.form-control:focus, textarea.form-control:focus {
+      background: var(--input-bg);
+      color: var(--text);
+      border-color: var(--input-border);
+      box-shadow: none;
+    }
+
+    .btn-outline-dark {
+      border-color: var(--btn-border);
+      color: var(--text);
+    }
+    .btn-outline-dark:hover { background: var(--btn-border); color: var(--bg); }
+
+    .page-link {
+      background: var(--card-bg) !important;
+      color: var(--text) !important;
+      border-color: var(--card-border) !important;
+    }
+
+    .text-muted { color: var(--muted) !important; }
+
+    /* Gallery-specific rules */
+    /* main image fills container */
+    .gallery-main img {
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      display:block;
+    }
+    /* thumbnails are constrained */
+    .gallery-thumbs a { display:inline-block; }
+    .gallery-thumb {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      display: block;
+      cursor: zoom-in;
+      border-radius: 6px;
+    }
+
+    /* ensure clickable cards show pointer */
+    .card[data-href] { cursor:pointer; }
+
+    .navbar { background: var(--card-bg) !important; }
+    footer { color: var(--muted); padding:20px 0; text-align:center; }
   </style>
+
   {% block extra_head %}{% endblock %}
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-light" style="background:#efe5d8;">
+
+<nav class="navbar navbar-expand-lg">
   <div class="container">
-    <a class="navbar-brand antique-header" href="{% url 'lots:lot_list' %}" style="font-size:1.4rem;">Антикварные лоты</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
+    <a class="navbar-brand antique-header" href="{% url 'lots:lot_list' %}">Антикварные лоты</a>
+
+    <div class="d-flex ms-auto align-items-center">
+      <button id="themeToggle" class="btn btn-sm btn-outline-dark me-2" aria-label="Toggle theme">🌙</button>
+      <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+    </div>
   </div>
-  <button id="themeToggle" class="btn btn-sm btn-outline-dark ms-auto">🌙</button>
-
-<style>
-  body.dark {
-      background: #121212 !important;
-      color: #e6e6e6 !important;
-  }
-  body.dark .card.antique {
-      background: #1c1c1c;
-      border-color: #333;
-  }
-  body.dark .navbar {
-      background: #222 !important;
-  }
-</style>
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const body = document.body;
-    const btn = document.getElementById("themeToggle");
-
-    if (localStorage.getItem("theme") === "dark") {
-        body.classList.add("dark");
-        btn.textContent = "☀️";
-    }
-
-    btn.addEventListener("click", () => {
-        body.classList.toggle("dark");
-        const isDark = body.classList.contains("dark");
-        localStorage.setItem("theme", isDark ? "dark" : "light");
-        btn.textContent = isDark ? "☀️" : "🌙";
-    });
-});
-</script>
 </nav>
 
 <main class="container py-4">
@@ -108,15 +145,31 @@ document.addEventListener("DOMContentLoaded", function () {
   </div>
 </footer>
 
+<!-- Scripts: Bootstrap first -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-{% block extra_js %}{% endblock %}
-<script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
+
+<!-- LightGallery UMD (ensure UMD so plugins are available on window) -->
+<script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/lightgallery.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/plugins/zoom/lg-zoom.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.umd.min.js"></script>
+
 <script>
-  const lightbox = GLightbox({
-      touchNavigation: true,
-      loop: true,
-      zoomable: true
-  });
+  // Theme toggle
+  (function(){
+    const body = document.body;
+    const btn = document.getElementById('themeToggle');
+    if (localStorage.getItem('theme') === 'dark') {
+      body.classList.add('dark'); btn.textContent = '☀️';
+    }
+    btn.addEventListener('click', () => {
+      body.classList.toggle('dark');
+      const dark = body.classList.contains('dark');
+      btn.textContent = dark ? '☀️' : '🌙';
+      localStorage.setItem('theme', dark ? 'dark' : 'light');
+    });
+  })();
 </script>
+
+{% block extra_js %}{% endblock %}
 </body>
 </html>
