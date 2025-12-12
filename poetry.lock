@@ -143,6 +143,42 @@ argon2 = ["argon2-cffi (>=23.1.0)"]
 bcrypt = ["bcrypt (>=4.1.1)"]
 
 [[package]]
+name = "django-appconf"
+version = "1.2.0"
+description = "A helper class for handling configuration defaults of packaged apps gracefully."
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "django_appconf-1.2.0-py3-none-any.whl", hash = "sha256:b81bce5ef0ceb9d84df48dfb623a32235d941c78cc5e45dbb6947f154ea277f4"},
+    {file = "django_appconf-1.2.0.tar.gz", hash = "sha256:15a88d60dd942d6059f467412fe4581db632ef03018a3c183fb415d6fc9e5cec"},
+]
+
+[package.dependencies]
+django = "*"
+
+[[package]]
+name = "django-select2"
+version = "8.4.3"
+description = "This is a Django_ integration of Select2_."
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "django_select2-8.4.3-py3-none-any.whl", hash = "sha256:c5910cf7c1e1d393af3e96842df8c28c1efa55e23a7c5f26494cadeb3911579f"},
+    {file = "django_select2-8.4.3.tar.gz", hash = "sha256:49626ccea8327dde7797d42788094fd362b502a479bc84b016d5c5c5ea976344"},
+]
+
+[package.dependencies]
+django = ">=4.2"
+django-appconf = ">=0.6.0"
+
+[package.extras]
+docs = ["sphinx"]
+selenium = ["selenium"]
+test = ["pytest", "pytest-cov", "pytest-django", "selenium"]
+
+[[package]]
 name = "executing"
 version = "2.2.1"
 description = "Get the currently executing AST node of a frame, and other information"
@@ -772,4 +808,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "f2a23c8084fab4599b03c7919b53bbd93182120ef9d725c52510fb4a75c2b250"
+content-hash = "6234dfcdec7c640e1aa0176e4c028bc8d439248d7161b8bde2db5a00ff49641f"

@@ -1,38 +1,62 @@
-from django.shortcuts import render, get_object_or_404
-from django.core.paginator import Paginator
-from .models import Lot
+import os
+
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
+from django.views.generic import ListView, DetailView
+from .models import Lot
 
-def lot_list(request):
-    qs = Lot.objects.filter(is_active=True)
 
-    q = request.GET.get("q", "").strip()
-    tag = request.GET.get("tag", "").strip()
-    category = request.GET.get("category", "").strip()
+class LotListView(ListView):
+    model = Lot
+    template_name = "lot_list.html"
+    context_object_name = "lots"
+    paginate_by = 12
 
-    if q:
-        qs = qs.filter(Q(title__icontains=q) | Q(description__icontains=q) | Q(tags__icontains=q))
+    def get_queryset(self):
+        qs = super().get_queryset().filter(is_active=True)
 
-    if tag:
-        # ищем, чтобы тег содержался в CSV
-        qs = qs.filter(tags__icontains=tag)
+        # параметры фильтрации из GET-запроса
+        q = self.request.GET.get("q", "").strip()
+        tag = self.request.GET.get("tag", "").strip()
+        category = self.request.GET.get("category", "").strip()
 
-    if category:
-        qs = qs.filter(category__iexact=category)
+        # фильтры
+        if q:
+            qs = qs.filter(
+                Q(title__icontains=q) |
+                Q(description__icontains=q) |
+                Q(tags__icontains=q)
+            )
 
-    paginator = Paginator(qs, 12)  # 12 на страницу
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
+        if tag:
+            # поиск тега содержался в CSV
+            qs = qs.filter(tags__icontains=tag)
 
-    context = {
-        "page_obj": page_obj,
-        "q": q,
-        "selected_tag": tag,
-        "selected_category": category,
-    }
-    return render(request, "lots/lot_list.html", context)
+        if category:
+            qs = qs.filter(category__iexact=category)
 
-def lot_detail(request, pk):
-    lot = get_object_or_404(Lot, pk=pk, is_active=True)
-    context = {"lot": lot}
-    return render(request, "lots/lot_detail.html", context)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # добавляем параметры фильтрации в контекст
+        context["q"] = self.request.GET.get("q", "").strip()
+        context["selected_tag"] = self.request.GET.get("tag", "").strip()
+        context["selected_category"] = self.request.GET.get("category", "").strip()
+
+        context["page_obj"] = context.get("page_obj")
+
+        return context
+
+
+class LotDetailView(DetailView):
+    model = Lot
+    template_name = "lots/lot_detail.html"
+    context_object_name = "lot"
+
+    def get_queryset(self):
+        # фильтр по активным лотам
+        return super().get_queryset().filter(is_active=True)
