@@ -1,0 +1,100 @@
+:root {
+  --transDur: 0.3s;
+}
+
+/* Контейнер масштаба */
+.theme {
+  display: flex;
+  align-items: center;
+  -webkit-tap-highlight-color: transparent;
+  font-size: 10px; /* Размер всего свича */
+  cursor: pointer;
+  position: relative;
+  z-index: 10;
+}
+
+.theme__toggle-wrap {
+  position: relative;
+  width: 6em;
+  height: 3em;
+  margin: 0 0.5em;
+}
+
+/* --- Иконки Emoji --- */
+
+.theme-icon-sun,
+.theme-icon-moon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%) scale(1);
+  font-size: 1.2em;
+  pointer-events: none;
+  z-index: 3;
+  transition: opacity var(--transDur) ease-in-out;
+}
+
+.theme-icon-sun {
+    left: 0.6em;
+    opacity: 0;
+}
+
+.theme-icon-moon {
+    right: 0.6em;
+    opacity: 1;
+}
+
+/* --- Логика переключения видимости (меняем местами) --- */
+
+/* Скрываем луну, когда отмечен (темная тема) */
+.theme__toggle:checked ~ .theme-icon-moon {
+    opacity: 0;
+}
+
+/* Показываем солнце, когда отмечен (темная тема) */
+.theme__toggle:checked ~ .theme-icon-sun {
+    opacity: 1;
+}
+
+
+/* --- Основа переключателя и ползунок --- */
+
+.theme__toggle {
+  background-color: #d6c8b2;
+  border-radius: 1.5em;
+  width: 100%;
+  height: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  display: block;
+  transition: background-color var(--transDur) ease-in-out;
+  margin: 0;
+  position: relative;
+  outline: none;
+  z-index: 1;
+}
+
+.theme__toggle:checked {
+  background-color: #333;
+}
+
+/* Подвижный кружок (ползунок) */
+.theme__toggle:before {
+  content: "";
+  display: block;
+  background-color: #fff; /* Белый ползунок */
+  border-radius: 50%;
+  width: 2.4em;
+  height: 2.4em;
+  position: absolute;
+  top: 0.3em;
+  left: 0.3em;
+  transition: transform var(--transDur) cubic-bezier(0.45, 0.05, 0.55, 0.95);
+  z-index: 2;
+}
+
+.theme__toggle:checked:before {
+  transform: translateX(3em);
+}
+
+.theme__fill { display: none; }

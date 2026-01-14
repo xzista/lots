@@ -1,0 +1,104 @@
+/* =========================
+   BASE_STYLE (THEME AWARE)
+   ========================= */
+
+:root{
+  --bg: #f7f3ee;
+  --text: #2b2b2b;
+  --muted: #6b5a49;
+  --card-bg: #fffdf9;
+  --card-border: #d6c8b2;
+  --input-bg: #fff;
+  --input-border: #d6c8b2;
+  --btn-border: #2b2b2b;
+  --placeholder: rgba(0,0,0,0.35);
+}
+
+body.dark{
+  --bg: #121212;
+  --text: #efefef;
+  --muted: #b5b5b5;
+  --card-bg: #1d1d1d;
+  --card-border: #333;
+  --input-bg: #222;
+  --input-border: #444;
+  --btn-border: #aaa;
+  --placeholder: rgba(255,255,255,0.55);
+}
+
+body {
+  font-family: 'Libre Franklin', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+}
+
+.antique-header { font-family:'Playfair Display', serif; color:var(--text); }
+
+.card.antique {
+  background: var(--card-bg);
+  color: var(--text);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+.tag { background: rgba(120,100,80,0.12); border-radius:12px; padding:4px 10px; color:var(--text); text-decoration:none; }
+
+/* IMPORTANT: don't override all images globally.
+   Use scoped rules for gallery main/thumb images below. */
+/* Inputs / placeholder */
+input.form-control, textarea.form-control {
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--text);
+}
+input.form-control::placeholder, textarea.form-control::placeholder {
+  color: var(--placeholder);
+  opacity: 1;
+}
+input.form-control:focus, textarea.form-control:focus {
+  background: var(--input-bg);
+  color: var(--text);
+  border-color: var(--input-border);
+  box-shadow: none;
+}
+
+.btn-outline-dark {
+  border-color: var(--btn-border);
+  color: var(--text);
+}
+.btn-outline-dark:hover { background: var(--btn-border); color: var(--bg); }
+
+.page-link {
+  background: var(--card-bg) !important;
+  color: var(--text) !important;
+  border-color: var(--card-border) !important;
+}
+
+.text-muted { color: var(--muted) !important; }
+
+/* Gallery-specific rules */
+/* main image fills container */
+.gallery-main img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  display:block;
+}
+/* thumbnails are constrained */
+.gallery-thumbs a { display:inline-block; }
+.gallery-thumb {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+  cursor: zoom-in;
+  border-radius: 6px;
+}
+
+/* ensure clickable cards show pointer */
+.card[data-href] { cursor:pointer; }
+
+.navbar { background: var(--card-bg) !important; }
+footer { color: var(--muted); padding:20px 0; text-align:center; }
