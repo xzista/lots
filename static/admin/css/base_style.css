@@ -43,7 +43,33 @@ body {
   box-shadow: 0 6px 18px rgba(0,0,0,0.06);
 }
 
-.tag { background: rgba(120,100,80,0.12); border-radius:12px; padding:4px 10px; color:var(--text); text-decoration:none; }
+.tag {
+  background: rgba(120,100,80,0.12);
+  border-radius: 12px;
+  padding: 4px 10px;
+  color: var(--text);
+  text-decoration: none;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0,0,0,.12);
+  background: rgba(120,100,80,0.18);
+}
+
+.tag:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0,0,0,.12);
+}
+
+.tag::before {
+  content: "#";
+  opacity: .4;
+}
 
 /* IMPORTANT: don't override all images globally.
    Use scoped rules for gallery main/thumb images below. */
