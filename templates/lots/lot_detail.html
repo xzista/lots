@@ -52,9 +52,12 @@
       <article>{{ lot.description|linebreaks }}</article>
 
       {% if lot.tags_list %}
-      <div class="mt-3">
+      <div class="mt-3 d-flex flex-wrap gap-2">
         {% for t in lot.tags_list %}
-        <span class="tag me-1">{{ t }}</span>
+        <a href="{% url 'lots:lot_list' %}?tag={{ t|urlencode }}"
+           class="tag">
+          {{ t }}
+        </a>
         {% endfor %}
       </div>
       {% endif %}
