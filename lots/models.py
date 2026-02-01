@@ -8,6 +8,7 @@ class Lot(models.Model):
     Админ может указывать любые теги через поле tags (разделенное запятой) или категорию.
     """
     title = models.CharField("Название", max_length=255)
+    price = models.IntegerField(verbose_name="Цена", help_text="Укажите цену")
     description = models.TextField("Описание", blank=True)
     main_image = models.ImageField("Основное изображение", upload_to="lots/images/", blank=True, null=True)
     created_at = models.DateTimeField("Дата создания", default=timezone.now)
