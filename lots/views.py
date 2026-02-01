@@ -59,4 +59,4 @@ class LotDetailView(DetailView):
 
     def get_queryset(self):
         # фильтр по активным лотам
-        return super().get_queryset().filter(is_active=True)
+        return super().get_queryset().filter(is_active=True).prefetch_related("images")

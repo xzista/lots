@@ -20,7 +20,7 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    path("lot_add/", admin.site.urls),
     path("", include("lots.urls", namespace="lots")),
 ]
 if settings.DEBUG:

@@ -8,8 +8,9 @@ class Lot(models.Model):
     Админ может указывать любые теги через поле tags (разделенное запятой) или категорию.
     """
     title = models.CharField("Название", max_length=255)
+    price = models.IntegerField(verbose_name="Цена", help_text="Укажите цену")
     description = models.TextField("Описание", blank=True)
-    image = models.ImageField("Изображение", upload_to="lots/images/", blank=True, null=True)
+    main_image = models.ImageField("Основное изображение", upload_to="lots/images/", blank=True, null=True)
     created_at = models.DateTimeField("Дата создания", default=timezone.now)
     updated_at = models.DateTimeField("Обновлён", auto_now=True)
     is_active = models.BooleanField("Активен", default=True)
@@ -28,7 +29,15 @@ class Lot(models.Model):
         return [t.strip() for t in self.tags.split(",") if t.strip()]
 
     def image_preview(self):
-        if self.image:
-            return mark_safe(f'<img src="{self.image.url}" style="max-height:100px;"/>')
+        if self.main_image:
+            return mark_safe(f'<img src="{self.main_image.url}" style="max-height:100px;"/>')
         return "(Нет изображения)"
     image_preview.short_description = "Превью"
+
+
+class LotImage(models.Model):
+    lot = models.ForeignKey(Lot, on_delete=models.CASCADE, related_name="images")
+    image = models.ImageField(upload_to="lots/gallery/")
+
+    def __str__(self):
+        return f"Image for {self.lot.title}"

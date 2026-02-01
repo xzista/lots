@@ -1,53 +1,89 @@
-<!-- templates/base.html -->
 <!doctype html>
 <html lang="ru">
+{% load static %}
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Антикварные лоты{% endblock %}</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Магия старины{% endblock %}</title>
 
-  <!-- Bootstrap CDN -->
+  <!-- Стандартный фавикон -->
+  <link rel="icon" type="image/x-icon" href="{% static 'favicons/favicon.ico' %}">
+
+  <!-- Для iPhone и Android -->
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'assets/favicons/apple-touch-icon.png' %}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'assets/favicons/favicon-32x32.png' %}">
+  <link rel="manifest" href="{% static 'assets/favicons/site.webmanifest' %}">
+
+  <!-- бутстрап -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
-  <!-- Антикварный шрифт (Google fonts) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Libre+Franklin:wght@300;400&display=swap" rel="stylesheet">
+  <!-- шрифты -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Libre+Franklin:wght@300;400&display=swap"
+        rel="stylesheet">
 
-  <style>
-    body {
-      font-family: 'Libre Franklin', Arial, sans-serif;
-      background: #f7f3ee; /* бумажный фон */
-      color: #2b2b2b;
-    }
-    .antique-header {
-      font-family: 'Playfair Display', serif;
-      letter-spacing: 1px;
-      color: #2d1f14;
-    }
-    .card.antique {
-      background: linear-gradient(180deg, #fffdf9 0%, #f6efe6 100%);
-      border: 1px solid #d6c8b2;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-      border-radius: 12px;
-    }
-    .tag {
-      background: rgba(45,31,20,0.06);
-      border: 1px solid rgba(45,31,20,0.08);
-      padding: 4px 8px;
-      border-radius: 10px;
-      font-size: 0.85rem;
-    }
-    footer { margin-top: 40px; padding: 20px 0; text-align: center; color: #6b5a49; }
-  </style>
+  <!-- LightGallery CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/css/lightgallery-bundle.min.css">
+
+  <link rel="stylesheet" href="{% static 'assets/css/switch.css' %}">
+  <link rel="stylesheet" href="{% static 'assets/css/contacts.css' %}">
+  <link rel="stylesheet" href="{% static 'assets/css/base_style.css' %}">
+
   {% block extra_head %}{% endblock %}
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-light" style="background:#efe5d8;">
+
+<nav class="navbar navbar-expand-lg">
   <div class="container">
-    <a class="navbar-brand antique-header" href="{% url 'lots:lot_list' %}" style="font-size:1.4rem;">Антикварные лоты</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
+    <a class="navbar-brand antique-header" href="{% url 'lots:lot_list' %}">Магия старины</a>
+    <div class="d-flex ms-auto align-items-center gap-3">
+
+      <!-- Контакты -->
+      <div class="nav-contacts">
+
+        <a href="https://wa.me/79035212931"
+           target="_blank"
+           class="contact-link contact-whatsapp">
+          <i class="bi bi-whatsapp"></i>
+          <span class="d-none d-md-inline">Написать в WhatsApp</span>
+        </a>
+
+        <a href="https://t.me/yanyushevich"
+           target="_blank"
+           class="contact-link contact-telegram">
+          <i class="bi bi-telegram"></i>
+          <span>@yanyushevich</span>
+        </a>
+
+        <a href="tel:+79162880202" class="contact-link">
+          +7 916 288-02-02
+        </a>
+
+        <a href="mailto:magiyastariny@inbox.ru"
+           class="contact-link contact-email navbar-email">
+          <i class="bi bi-envelope"></i>
+          <span class="d-none d-md-inline">magiyastariny@inbox.ru</span>
+        </a>
+
+      </div>
+
+      <label for="theme" class="theme">
+        <span class="theme__toggle-wrap">
+            <input id="theme" class="theme__toggle" type="checkbox" role="switch" name="theme" value="dark">
+          <!-- Новые иконки Emoji -->
+            <span class="theme-icon-sun">☀️</span>
+            <span class="theme-icon-moon">🌙</span>
+        </span>
+      </label>
+
+      <!-- Переключатель темы -->
+      <!--<button id="themeToggle" class="btn btn-sm btn-outline-dark" aria-label="Toggle theme">🌙</button>-->
+      <!-- потом активировать для меню навбара мобилки
+      <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+       -->
+    </div>
   </div>
 </nav>
 
@@ -57,11 +93,72 @@
 
 <footer>
   <div class="container">
-    <small>© Антикварные лоты</small>
+    <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap">
+
+      <small class="contact-muted">© Магия старины</small>
+
+      <a href="https://wa.me/79035212931"
+         target="_blank"
+         class="contact-link contact-muted contact-whatsapp">
+        <i class="bi bi-whatsapp"></i>
+        <span class="d-none d-sm-inline">WhatsApp</span>
+      </a>
+
+      <a href="https://t.me/yanyushevich"
+         target="_blank"
+         class="contact-link contact-muted contact-telegram">
+        <i class="bi bi-telegram"></i>
+        <span>@yanyushevich</span>
+      </a>
+
+      <a href="tel:+79162880202"
+         class="contact-link contact-muted">
+        +7 916 288-02-02
+      </a>
+
+      <a href="mailto:magiyastariny@inbox.ru"
+         class="contact-link contact-muted contact-email">
+        <i class="bi bi-envelope"></i>
+        <span>magiyastariny@inbox.ru</span>
+      </a>
+
+    </div>
   </div>
 </footer>
 
+<!-- Scripts: Bootstrap сначала -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- LightGallery UMD (ensure UMD so plugins are available on window) -->
+<script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/lightgallery.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/plugins/zoom/lg-zoom.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.umd.min.js"></script>
+
+<script>
+  (function(){
+    const body = document.body;
+    const themeCheckbox = document.getElementById('theme');
+
+    // При загрузке страницы
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      body.classList.add('dark');
+      themeCheckbox.checked = true;
+    }
+
+    // Слушаем переключатель
+    themeCheckbox.addEventListener('change', function() {
+      if (this.checked) {
+        body.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        body.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      }
+    });
+  })();
+</script>
+
 {% block extra_js %}{% endblock %}
 </body>
 </html>

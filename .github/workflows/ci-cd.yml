@@ -1,0 +1,124 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: ${{ secrets.TEST_POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.TEST_POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.TEST_POSTGRES_PASSWORD }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 3
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+
+      - name: Install Poetry
+        run: |
+          pip install poetry
+          poetry config virtualenvs.create false
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-ansi
+
+      - name: Run migrations
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY_TEST }}
+          POSTGRES_DB: ${{ secrets.TEST_POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.TEST_POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.TEST_POSTGRES_PASSWORD }}
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          DEBUG: True
+        run: |
+          python manage.py migrate --noinput
+          python manage.py collectstatic --noinput
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+#    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            set -e
+
+            echo "--- GO TO PROJECT ---"
+            cd /var/www/lots || {
+              sudo mkdir -p /var/www/lots
+              sudo chown $USER:$USER /var/www/lots
+              git clone https://github.com/xzista/lots.git /var/www/lots
+              cd /var/www/lots
+            }
+                    
+            echo "--- UPDATE CODE ---"
+            git pull origin main
+            
+            echo "--- CREATE .env FILE ---"
+            cat > .env << EOF
+            SECRET_KEY=${{ secrets.SECRET_KEY }}
+            DEBUG=False
+            POSTGRES_DB=${{ secrets.POSTGRES_NAME }}
+            POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            POSTGRES_HOST=db
+            POSTGRES_PORT=5432
+            ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}
+            CSRF_TRUSTED_ORIGINS=${{ secrets.CSRF_TRUSTED_ORIGINS }}
+            EMAIL_HOST_USER=${{ secrets.EMAIL_HOST_USER }}
+            EMAIL_HOST_PASSWORD=${{ secrets.EMAIL_HOST_PASSWORD }}
+            USE_HTTPS=False
+            EOF
+            
+            echo "--- BUILD AND START CONTAINERS ---"
+            sudo docker compose -f docker-compose.yaml down || true
+            sudo docker compose -f docker-compose.yaml build --no-cache
+            sudo docker compose -f docker-compose.yaml up -d
+            
+            echo "--- WAIT FOR DATABASE ---"
+            sleep 20
+            
+            echo "--- CHECK CONTAINER LOGS ---"
+            sudo docker compose -f docker-compose.yaml logs web
+            
+            echo "--- APPLY MIGRATIONS ---"
+            sudo docker compose -f docker-compose.yaml exec -T web python manage.py migrate --noinput
+            
+            echo "--- COLLECT STATIC ---"
+            sudo docker compose exec -T web python manage.py collectstatic --noinput
+            
+            echo "--- CLEAN OLD IMAGES ---"
+            sudo docker image prune -f
+            
+            echo "--- CHECK DEPLOYMENT ---"
+            sleep 15
+            curl -f http://localhost || echo "Service check failed but continuing..."
+            
+            echo "--- DEPLOYMENT COMPLETE ---"
