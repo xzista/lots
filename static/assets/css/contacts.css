@@ -1,0 +1,90 @@
+/* =========================
+   CONTACTS (THEME AWARE)
+   ========================= */
+
+.contact-link {
+  color: var(--text);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.contact-link:hover {
+  opacity: 0.9;
+}
+
+.contact-muted {
+  color: var(--muted);
+}
+
+/* =========================
+   BRAND COLORS
+   ========================= */
+
+/* Desktop: only on hover */
+@media (hover: hover) and (pointer: fine) {
+  .contact-whatsapp:hover {
+    color: #25D366;
+  }
+
+  .contact-telegram:hover {
+    color: #229ED9;
+  }
+}
+
+/* Mobile: always colored */
+@media (hover: none) and (pointer: coarse) {
+  .contact-whatsapp {
+    color: #25D366;
+  }
+
+  .contact-telegram {
+    color: #229ED9;
+  }
+}
+
+/* =========================
+   NAVBAR CONTACTS LAYOUT
+   ========================= */
+
+.nav-contacts {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  white-space: nowrap;
+}
+
+/* Mobile layout: one row, big icons */
+@media (max-width: 768px) {
+  .nav-contacts {
+    flex-direction: row;
+    gap: 16px;
+    font-size: 1rem;
+  }
+
+  .nav-contacts i {
+    font-size: 1.6rem;
+  }
+
+  .nav-contacts span {
+    display: none;
+  }
+}
+
+/* =========================
+   EMAIL
+   ========================= */
+
+/* desktop only (navbar) */
+@media (max-width: 768px) {
+  .contact-email.navbar-email {
+    display: none;
+  }
+}
+
+/* footer email always visible */
+.contact-email {
+  color: var(--muted);
+}
