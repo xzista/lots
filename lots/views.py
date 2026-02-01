@@ -19,7 +19,7 @@ class LotListView(ListView):
 
         # параметры фильтрации из GET-запроса
         q = self.request.GET.get("q", "").strip()
-        tag = self.request.GET.get("tag", "").strip()
+        tag = self.request.GET.get("tag", "").strip().lower()
         category = self.request.GET.get("category", "").strip()
 
         # фильтры
