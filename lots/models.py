@@ -1,12 +1,10 @@
+import re
 from django.db import models
 from django.utils import timezone
 from django.utils.html import mark_safe
 
+
 class Lot(models.Model):
-    """
-    Простая модель лота: заголовок, описание, изображение, теги (через CSV), категория.
-    Админ может указывать любые теги через поле tags (разделенное запятой) или категорию.
-    """
     title = models.CharField("Название", max_length=255)
     price = models.IntegerField(verbose_name="Цена", help_text="Укажите цену")
     description = models.TextField("Описание", blank=True)
@@ -15,7 +13,8 @@ class Lot(models.Model):
     updated_at = models.DateTimeField("Обновлён", auto_now=True)
     is_active = models.BooleanField("Активен", default=True)
     category = models.CharField("Категория", max_length=100, blank=True, help_text="Например: Иконы, Живопись")
-    tags = models.CharField("Теги (через запятую)", max_length=255, blank=True, help_text="Введите теги через запятую")
+    tags = models.CharField("Теги (через запятую)", max_length=255, blank=True,
+                            help_text="Введите теги через запятую")
 
     class Meta:
         ordering = ["-created_at"]
@@ -25,6 +24,24 @@ class Lot(models.Model):
     def __str__(self):
         return self.title
 
+    # Нормализация тегов
+    def normalize_tags(self):
+        result = []
+
+        for t in self.tags.split(","):
+            # Убираем мусорные пробелы + приводим к нижнему регистру
+            t = re.sub(r"\s+", " ", t.strip().lower())
+
+            if t and t not in result:
+                result.append(t)
+
+        return ", ".join(result)
+
+    def save(self, *args, **kwargs):
+        if self.tags:
+            self.tags = self.normalize_tags()
+        super().save(*args, **kwargs)
+
     def tags_list(self):
         return [t.strip() for t in self.tags.split(",") if t.strip()]
 
@@ -32,6 +49,7 @@ class Lot(models.Model):
         if self.main_image:
             return mark_safe(f'<img src="{self.main_image.url}" style="max-height:100px;"/>')
         return "(Нет изображения)"
+
     image_preview.short_description = "Превью"
 
 
