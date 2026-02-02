@@ -16,3 +16,13 @@ class LotAdmin(admin.ModelAdmin):
     readonly_fields = ("image_preview",)
     fields = ("title", "price", "description", "main_image", "image_preview", "category", "tags", "is_active", "created_at", "updated_at")
     readonly_fields = ("created_at", "updated_at", "image_preview")
+
+    class Media:
+        css = {
+            'all': (
+                'assets/css/autocomplete.css',
+            )
+        }
+        js = (
+            'assets/js/autocomplete.js',
+        )

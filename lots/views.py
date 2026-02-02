@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
+from django.http import JsonResponse
 from django.views.generic import ListView, DetailView
 from .models import Lot
 
@@ -60,3 +61,22 @@ class LotDetailView(DetailView):
     def get_queryset(self):
         # фильтр по активным лотам
         return super().get_queryset().filter(is_active=True).prefetch_related("images")
+
+
+def tag_suggestions(request):
+    q = request.GET.get("q", "").strip().lower()
+
+    if len(q) < 2:
+        return JsonResponse([], safe=False)
+
+    all_tags = set()
+
+    for lot in Lot.objects.exclude(tags="").values_list("tags", flat=True):
+        for tag in lot.split(","):
+            tag = re.sub(r"\s+", " ", tag.strip().lower())
+            if tag:
+                all_tags.add(tag)
+
+    result = [t for t in all_tags if q in t]
+
+    return JsonResponse(sorted(result)[:15], safe=False)

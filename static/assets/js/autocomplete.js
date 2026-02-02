@@ -101,3 +101,48 @@
         });
     });
 })(django.jQuery);
+
+(function($) {
+    $(document).ready(function() {
+
+        const $input = $('input[name="tags"]');
+        if (!$input.length) return;
+
+        const listId = 'tags-datalist';
+        if (!$('#' + listId).length) {
+            $('body').append(`<datalist id="${listId}"></datalist>`);
+        }
+
+        $input.attr('list', listId);
+
+        $input.on('input', function() {
+            let value = this.value;
+            let parts = value.split(',');
+            let last = parts[parts.length - 1].trim();
+
+            if (last.length < 2) return;
+
+            fetch(`/tag-suggestions/?q=${encodeURIComponent(last)}`)
+                .then(r => r.json())
+                .then(data => {
+                    const dl = $('#' + listId);
+                    dl.empty();
+                    data.forEach(tag => {
+                        dl.append(`<option value="${tag}">`);
+                    });
+                });
+        });
+
+        $input.on('change', function() {
+            let parts = this.value.split(',');
+
+            let selected = parts.pop().trim();
+            let prefix = parts.map(p => p.trim()).filter(Boolean);
+
+            prefix.push(selected);
+
+            this.value = prefix.join(', ') + ', ';
+        });
+
+    });
+})(django.jQuery);
