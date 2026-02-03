@@ -29,17 +29,26 @@ class Lot(models.Model):
         result = []
 
         for t in self.tags.split(","):
-            # Убираем мусорные пробелы + приводим к нижнему регистру
             t = re.sub(r"\s+", " ", t.strip().lower())
-
             if t and t not in result:
                 result.append(t)
 
         return ", ".join(result)
 
+    # Нормализация категории
+    def normalize_category(self):
+        return " ".join(
+            word.capitalize()
+            for word in re.sub(r"\s+", " ", self.category.strip()).split(" ")
+        )
+
     def save(self, *args, **kwargs):
         if self.tags:
             self.tags = self.normalize_tags()
+
+        if self.category:
+            self.category = self.normalize_category()
+
         super().save(*args, **kwargs)
 
     def tags_list(self):

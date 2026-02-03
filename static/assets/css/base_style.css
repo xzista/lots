@@ -26,14 +26,17 @@ body.dark{
   --placeholder: rgba(255,255,255,0.55);
 }
 
-body {
-  font-family: 'Libre Franklin', Arial, sans-serif;
+html body {
+  font-family: 'Libre Franklin', Arial, sans-serif !important;
   background: var(--bg);
   color: var(--text);
   margin: 0;
 }
 
-.antique-header { font-family:'Playfair Display', serif; color:var(--text); }
+.antique-header {
+  font-family: 'Playfair Display', serif !important;
+  color: var(--text) !important;
+}
 
 .card.antique {
   background: var(--card-bg);
@@ -66,9 +69,13 @@ body {
   box-shadow: 0 1px 4px rgba(0,0,0,.12);
 }
 
-.tag::before {
+.tag:not(.no-hash)::before {
   content: "#";
   opacity: .4;
+}
+
+.tag.no-hash {
+  gap: 0;
 }
 
 /* IMPORTANT: don't override all images globally.
@@ -128,3 +135,20 @@ input.form-control:focus, textarea.form-control:focus {
 
 .navbar { background: var(--card-bg) !important; }
 footer { color: var(--muted); padding:20px 0; text-align:center; }
+
+.category-tag {
+  background: linear-gradient(135deg, rgba(120,100,80,.25), rgba(120,100,80,.15));
+  border: 1px solid rgba(120,100,80,.35);
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+
+.category-tag:hover {
+  background: linear-gradient(135deg, rgba(120,100,80,.35), rgba(120,100,80,.2));
+}
+
+.category-tag.active {
+  background: rgba(120,100,80,.45);
+  border-color: rgba(120,100,80,.6);
+  box-shadow: 0 3px 10px rgba(0,0,0,.15);
+}

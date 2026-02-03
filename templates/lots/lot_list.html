@@ -28,10 +28,10 @@
 <!-- Категории -->
 <div class="row mb-2">
   <div class="col-12 d-flex flex-wrap gap-2">
-    <a href="{% url 'lots:lot_list' %}" class="tag">Все</a>
+    <a href="{% url 'lots:lot_list' %}" class="tag category-tag no-hash">Все</a>
 
     {% for cat in site_categories %}
-      <a class="tag {% if selected_category == cat %}border-2{% endif %}"
+      <a class="tag category-tag no-hash {% if selected_category == cat %}active{% endif %}"
          href="?category={{ cat|urlencode }}">
          {{ cat }}
       </a>
