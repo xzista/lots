@@ -2,147 +2,61 @@
     'use strict';
 
     $(document).ready(function() {
-        // Функция для создания автокомплита
-        function initAutocomplete($input) {
-            var field = $input.data('field');
-            var $hiddenInput = $('#' + $input.attr('id').replace('_autocomplete', ''));
-
-            // Создаем datalist
-            var datalistId = 'datalist-' + field;
-            if (!$('#' + datalistId).length) {
-                $('body').append('<datalist id="' + datalistId + '"></datalist>');
-            }
-
-            $input.attr('list', datalistId);
-
-            // Загружаем популярные значения
-            var popularValues = [];
-            switch(field) {
-                case 'artist':
-                    popularValues = POPULAR_ARTISTS || [];
-                    break;
-                case 'material':
-                    popularValues = POPULAR_MATERIALS || [];
-                    break;
-                case 'technique':
-                    popularValues = POPULAR_TECHNIQUES || [];
-                    break;
-            }
-
-            // Добавляем опции в datalist
-            var $datalist = $('#' + datalistId);
-            $datalist.empty();
-
-            popularValues.forEach(function(value) {
-                $datalist.append('<option value="' + value + '">');
-            });
-
-            // Обработчик изменения значения
-            $input.on('input', function() {
-                var value = $(this).val();
-                $hiddenInput.val(value);
-
-                // Динамическая подгрузка предложений
-                if (value.length >= 2) {
-                    $.get('/admin/lots/lot/suggestions/', {
-                        field: field,
-                        q: value
-                    }, function(data) {
-                        $datalist.empty();
-                        data.forEach(function(item) {
-                            $datalist.append('<option value="' + item + '">');
-                        });
-                    });
-                }
-            });
-        }
-
-        // Инициализируем автокомплиты
-        $('.autocomplete-input').each(function() {
-            initAutocomplete($(this));
-        });
-
-        // Обработчик для быстрого добавления тегов
-        $('select[name="tags"]').on('select2:select', function(e) {
-            var data = e.params.data;
-            if (data._resultId && data._resultId.startsWith('new:')) {
-                var tagName = data.text;
-                var fieldType = prompt('Выберите тип тега:\n1 - Автор\n2 - Материал\n3 - Техника\n4 - Стиль\n5 - Сюжет', '1');
-
-                var fieldMap = {
-                    '1': 'artist',
-                    '2': 'material',
-                    '3': 'technique',
-                    '4': 'style',
-                    '5': 'subject'
-                };
-
-                if (fieldType && fieldMap[fieldType]) {
-                    // Отправляем AJAX запрос для создания тега
-                    $.ajax({
-                        url: '/admin/lots/tag/add/',
-                        method: 'POST',
-                        data: {
-                            name: tagName,
-                            field_type: fieldMap[fieldType],
-                            csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val()
-                        },
-                        success: function(response) {
-                            if (response.success) {
-                                // Обновляем список тегов
-                                var $select = $('select[name="tags"]');
-                                var newOption = new Option(tagName, response.id, true, true);
-                                $select.append(newOption).trigger('change');
-                            }
-                        }
-                    });
-                }
-            }
-        });
+        setTimeout(initAutocomplete, 500);
     });
-})(django.jQuery);
 
-(function($) {
-    $(document).ready(function() {
+    function initAutocomplete() {
+        const $field = $('.field-tags input, .field-tags textarea').first();
+        if (!$field.length) return;
 
-        const $input = $('input[name="tags"]');
-        if (!$input.length) return;
+        if ($field.data('autocomplete-initialized')) return;
+        $field.data('autocomplete-initialized', true);
 
-        const listId = 'tags-datalist';
-        if (!$('#' + listId).length) {
-            $('body').append(`<datalist id="${listId}"></datalist>`);
-        }
+        const datalistId = 'tags-datalist';
+        const $datalist = $('<datalist id="' + datalistId + '"></datalist>');
+        $('body').append($datalist);
 
-        $input.attr('list', listId);
+        $field.attr('list', datalistId);
+        $field.attr('autocomplete', 'off');
 
-        $input.on('input', function() {
-            let value = this.value;
-            let parts = value.split(',');
-            let last = parts[parts.length - 1].trim();
+        let timer;
 
-            if (last.length < 2) return;
+        function updateSuggestions() {
+            const text = $field.val() || '';
+            const parts = text.split(',').map(t => t.trim()).filter(Boolean);
+            const last = parts.length ? parts[parts.length - 1] : '';
 
-            fetch(`/tag-suggestions/?q=${encodeURIComponent(last)}`)
-                .then(r => r.json())
-                .then(data => {
-                    const dl = $('#' + listId);
-                    dl.empty();
-                    data.forEach(tag => {
-                        dl.append(`<option value="${tag}">`);
-                    });
+            if (last.length < 1) {
+                $datalist.empty();
+                return;
+            }
+
+            $.get('/lot_add/lots/lot/tag-suggestions/', {
+                q: last,
+                input: text
+            }, function(data) {
+                $datalist.empty();
+
+                let prefix = parts.length > 1
+                    ? parts.slice(0, -1).join(', ') + ', '
+                    : '';
+
+                data.forEach(tag => {
+                    $datalist.append(`<option value="${prefix}${tag}">`);
                 });
+            });
+        }
+
+        $field.on('input', function() {
+            clearTimeout(timer);
+            timer = setTimeout(updateSuggestions, 300);
         });
 
-        $input.on('change', function() {
-            let parts = this.value.split(',');
-
-            let selected = parts.pop().trim();
-            let prefix = parts.map(p => p.trim()).filter(Boolean);
-
-            prefix.push(selected);
-
-            this.value = prefix.join(', ') + ', ';
+        $field.on('change', function() {
+            let val = $(this).val().trim();
+            if (val && !val.endsWith(',')) {
+                $(this).val(val + ', ');
+            }
         });
-
-    });
+    }
 })(django.jQuery);
