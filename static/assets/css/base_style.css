@@ -26,14 +26,17 @@ body.dark{
   --placeholder: rgba(255,255,255,0.55);
 }
 
-body {
-  font-family: 'Libre Franklin', Arial, sans-serif;
+html body {
+  font-family: 'Libre Franklin', Arial, sans-serif !important;
   background: var(--bg);
   color: var(--text);
   margin: 0;
 }
 
-.antique-header { font-family:'Playfair Display', serif; color:var(--text); }
+.antique-header {
+  font-family: 'Playfair Display', serif !important;
+  color: var(--text) !important;
+}
 
 .card.antique {
   background: var(--card-bg);
