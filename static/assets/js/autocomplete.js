@@ -2,102 +2,61 @@
     'use strict';
 
     $(document).ready(function() {
-        // Функция для создания автокомплита
-        function initAutocomplete($input) {
-            var field = $input.data('field');
-            var $hiddenInput = $('#' + $input.attr('id').replace('_autocomplete', ''));
+        setTimeout(initAutocomplete, 500);
+    });
 
-            // Создаем datalist
-            var datalistId = 'datalist-' + field;
-            if (!$('#' + datalistId).length) {
-                $('body').append('<datalist id="' + datalistId + '"></datalist>');
+    function initAutocomplete() {
+        const $field = $('.field-tags input, .field-tags textarea').first();
+        if (!$field.length) return;
+
+        if ($field.data('autocomplete-initialized')) return;
+        $field.data('autocomplete-initialized', true);
+
+        const datalistId = 'tags-datalist';
+        const $datalist = $('<datalist id="' + datalistId + '"></datalist>');
+        $('body').append($datalist);
+
+        $field.attr('list', datalistId);
+        $field.attr('autocomplete', 'off');
+
+        let timer;
+
+        function updateSuggestions() {
+            const text = $field.val() || '';
+            const parts = text.split(',').map(t => t.trim()).filter(Boolean);
+            const last = parts.length ? parts[parts.length - 1] : '';
+
+            if (last.length < 1) {
+                $datalist.empty();
+                return;
             }
 
-            $input.attr('list', datalistId);
+            $.get('/lot_add/lots/lot/tag-suggestions/', {
+                q: last,
+                input: text
+            }, function(data) {
+                $datalist.empty();
 
-            // Загружаем популярные значения
-            var popularValues = [];
-            switch(field) {
-                case 'artist':
-                    popularValues = POPULAR_ARTISTS || [];
-                    break;
-                case 'material':
-                    popularValues = POPULAR_MATERIALS || [];
-                    break;
-                case 'technique':
-                    popularValues = POPULAR_TECHNIQUES || [];
-                    break;
-            }
+                let prefix = parts.length > 1
+                    ? parts.slice(0, -1).join(', ') + ', '
+                    : '';
 
-            // Добавляем опции в datalist
-            var $datalist = $('#' + datalistId);
-            $datalist.empty();
-
-            popularValues.forEach(function(value) {
-                $datalist.append('<option value="' + value + '">');
-            });
-
-            // Обработчик изменения значения
-            $input.on('input', function() {
-                var value = $(this).val();
-                $hiddenInput.val(value);
-
-                // Динамическая подгрузка предложений
-                if (value.length >= 2) {
-                    $.get('/admin/lots/lot/suggestions/', {
-                        field: field,
-                        q: value
-                    }, function(data) {
-                        $datalist.empty();
-                        data.forEach(function(item) {
-                            $datalist.append('<option value="' + item + '">');
-                        });
-                    });
-                }
+                data.forEach(tag => {
+                    $datalist.append(`<option value="${prefix}${tag}">`);
+                });
             });
         }
 
-        // Инициализируем автокомплиты
-        $('.autocomplete-input').each(function() {
-            initAutocomplete($(this));
+        $field.on('input', function() {
+            clearTimeout(timer);
+            timer = setTimeout(updateSuggestions, 300);
         });
 
-        // Обработчик для быстрого добавления тегов
-        $('select[name="tags"]').on('select2:select', function(e) {
-            var data = e.params.data;
-            if (data._resultId && data._resultId.startsWith('new:')) {
-                var tagName = data.text;
-                var fieldType = prompt('Выберите тип тега:\n1 - Автор\n2 - Материал\n3 - Техника\n4 - Стиль\n5 - Сюжет', '1');
-
-                var fieldMap = {
-                    '1': 'artist',
-                    '2': 'material',
-                    '3': 'technique',
-                    '4': 'style',
-                    '5': 'subject'
-                };
-
-                if (fieldType && fieldMap[fieldType]) {
-                    // Отправляем AJAX запрос для создания тега
-                    $.ajax({
-                        url: '/admin/lots/tag/add/',
-                        method: 'POST',
-                        data: {
-                            name: tagName,
-                            field_type: fieldMap[fieldType],
-                            csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val()
-                        },
-                        success: function(response) {
-                            if (response.success) {
-                                // Обновляем список тегов
-                                var $select = $('select[name="tags"]');
-                                var newOption = new Option(tagName, response.id, true, true);
-                                $select.append(newOption).trigger('change');
-                            }
-                        }
-                    });
-                }
+        $field.on('change', function() {
+            let val = $(this).val().trim();
+            if (val && !val.endsWith(',')) {
+                $(this).val(val + ', ');
             }
         });
-    });
+    }
 })(django.jQuery);
