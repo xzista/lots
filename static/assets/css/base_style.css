@@ -132,3 +132,20 @@ input.form-control:focus, textarea.form-control:focus {
 
 .navbar { background: var(--card-bg) !important; }
 footer { color: var(--muted); padding:20px 0; text-align:center; }
+
+.category-tag {
+  background: linear-gradient(135deg, rgba(120,100,80,.25), rgba(120,100,80,.15));
+  border: 1px solid rgba(120,100,80,.35);
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+
+.category-tag:hover {
+  background: linear-gradient(135deg, rgba(120,100,80,.35), rgba(120,100,80,.2));
+}
+
+.category-tag.active {
+  background: rgba(120,100,80,.45);
+  border-color: rgba(120,100,80,.6);
+  box-shadow: 0 3px 10px rgba(0,0,0,.15);
+}
