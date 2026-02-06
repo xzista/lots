@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "users",
     "lots",
     'django_cleanup.apps.CleanupConfig',
+    'telegram_bot',
 ]
 
 MIDDLEWARE = [
@@ -116,3 +117,6 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 SITE_URL = os.getenv("SITE_URL", "http://localhost:8000")
+
+TG_BOT_TOKEN = os.getenv("TG_BOT_TOKEN")
+TG_ADMIN_ID = int(os.getenv("TG_ADMIN_ID"))
