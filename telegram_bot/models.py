@@ -4,6 +4,7 @@ from lots.models import Lot
 
 class TelegramDialog(models.Model):
     tg_user_id = models.BigIntegerField(unique=True)
+    topic_id = models.BigIntegerField(null=True, blank=True)
     username = models.CharField(max_length=255, blank=True, null=True)
     first_name = models.CharField(max_length=255, blank=True, null=True)
     last_name = models.CharField(max_length=255, blank=True, null=True)

@@ -120,3 +120,4 @@ SITE_URL = os.getenv("SITE_URL", "http://localhost:8000")
 
 TG_BOT_TOKEN = os.getenv("TG_BOT_TOKEN")
 TG_ADMIN_ID = int(os.getenv("TG_ADMIN_ID"))
+TG_ADMIN_GROUP_ID = int(os.getenv("TG_ADMIN_GROUP_ID"))
