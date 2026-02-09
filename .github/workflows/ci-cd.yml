@@ -6,6 +6,7 @@ on:
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,6 +25,10 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 3
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
 
     steps:
       - name: Checkout code
@@ -42,7 +47,7 @@ jobs:
       - name: Install dependencies
         run: poetry install --no-interaction --no-ansi
 
-      - name: Run migrations
+      - name: Run migrations & checks
         env:
           SECRET_KEY: ${{ secrets.SECRET_KEY_TEST }}
           POSTGRES_DB: ${{ secrets.TEST_POSTGRES_DB }}
@@ -50,6 +55,7 @@ jobs:
           POSTGRES_PASSWORD: ${{ secrets.TEST_POSTGRES_PASSWORD }}
           POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
+          REDIS_URL: redis://localhost:6379/0
           DEBUG: True
           CSRF_TRUSTED_ORIGINS: http://localhost
         run: |
@@ -91,8 +97,11 @@ jobs:
             POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             POSTGRES_HOST=db
             POSTGRES_PORT=5432
+            REDIS_URL=redis://redis:6379/0
             ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}
             CSRF_TRUSTED_ORIGINS=${{ secrets.CSRF_TRUSTED_ORIGINS }}
+            TG_BOT_TOKEN=${{ secrets.TG_BOT_TOKEN }}
+            TG_ADMIN_GROUP_ID=${{ secrets.TG_ADMIN_GROUP_ID }}
             USE_HTTPS=False
             EOF
             
@@ -119,5 +128,6 @@ jobs:
             echo "--- CHECK DEPLOYMENT ---"
             sleep 15
             curl -f http://localhost || echo "Service check failed but continuing..."
+            sudo docker compose ps
             
             echo "--- DEPLOYMENT COMPLETE ---"
