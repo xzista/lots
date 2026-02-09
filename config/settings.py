@@ -6,7 +6,7 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv("SECRET_KEY", "unsafe-secret-for-dev")
+SECRET_KEY = os.environ["SECRET_KEY"]
 
 DEBUG = True if os.getenv("DEBUG") == "True" else False
 
@@ -121,3 +121,5 @@ SITE_URL = os.getenv("SITE_URL", "http://localhost:8000")
 TG_BOT_TOKEN = os.getenv("TG_BOT_TOKEN")
 TG_ADMIN_ID = int(os.getenv("TG_ADMIN_ID"))
 TG_ADMIN_GROUP_ID = int(os.getenv("TG_ADMIN_GROUP_ID"))
+
+REDIS_URL = os.getenv("REDIS_URL")
