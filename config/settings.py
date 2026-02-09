@@ -118,8 +118,8 @@ AUTHENTICATION_BACKENDS = [
 
 SITE_URL = os.getenv("SITE_URL", "http://localhost:8000")
 
-TG_BOT_TOKEN = os.getenv("TG_BOT_TOKEN")
-TG_ADMIN_ID = int(os.getenv("TG_ADMIN_ID"))
-TG_ADMIN_GROUP_ID = int(os.getenv("TG_ADMIN_GROUP_ID"))
+TG_BOT_TOKEN = os.getenv("TG_BOT_TOKEN", 0)
+TG_ADMIN_ID = int(os.getenv("TG_ADMIN_ID", 0))
+TG_ADMIN_GROUP_ID = int(os.getenv("TG_ADMIN_GROUP_ID", 0))
 
 REDIS_URL = os.getenv("REDIS_URL")
