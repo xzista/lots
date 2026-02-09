@@ -1,10 +1,17 @@
 import asyncio
+import html
+
 from aiogram import types
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from asgiref.sync import sync_to_async
 from django.conf import settings
+from redis.asyncio import Redis
 from .models import TelegramDialog, TelegramMessage
 from lots.models import Lot
+from redis.exceptions import LockError
+
+# инициализация клиента Redis
+redis_client = Redis.from_url(settings.REDIS_URL, decode_responses=True)
 
 
 # ---------- ORM helpers ----------
@@ -50,6 +57,23 @@ def get_lot_safe(lot_id):
         return None
 
 
+# ---------- REDIS HELPERS ----------
+
+async def get_cached_topic_id(user_id):
+    """Получить ID топика из кэша Redis"""
+    return await redis_client.get(f"topic_id:{user_id}")
+
+
+async def set_cached_topic_id(user_id, topic_id):
+    """Сохранить ID топика в кэш на 24 часа"""
+    await redis_client.set(f"topic_id:{user_id}", topic_id, ex=86400)
+
+
+async def delete_cached_topic_id(user_id):
+    """Удалить ID топика из кэша"""
+    await redis_client.delete(f"topic_id:{user_id}")
+
+
 # ---------- BOT LOGIC ----------
 
 async def handle_start(message: types.Message):
@@ -68,76 +92,87 @@ async def handle_start(message: types.Message):
     await message.answer("Здравствуйте! Напишите ваш вопрос.")
 
 
-topic_lock = asyncio.Lock()
-
-
 async def handle_message(message: types.Message):
-    # 1. Получаем/создаем диалог
-    dialog, _ = await get_or_create_dialog(message.from_user)
+    user_id = message.from_user.id
+    try:
+        async with redis_client.lock(f"lock:topic_creation:{user_id}", timeout=30, blocking_timeout=5):
+            # сначала ищем ID топика в кэше
+            topic_id = await get_cached_topic_id(user_id)
+            dialog, _ = await get_or_create_dialog(message.from_user)
 
-    # 2. Проверяем актуальность топика под локом
-    is_new_topic_needed = False
-    async with topic_lock:
-        # Важно: перечитываем dialog из БД, если он мог быть изменен другим процессом
-        dialog = await get_dialog_with_lot(message.from_user.id)
+            is_new_topic_needed = False
 
-        if dialog.topic_id:
-            try:
-                # Проверяем, жив ли топик в Telegram
-                await message.bot.send_chat_action(
-                    chat_id=settings.TG_ADMIN_GROUP_ID,
-                    action="typing",
-                    message_thread_id=dialog.topic_id
-                )
-            except Exception:
-                # Если ошибка (топик удален), помечаем на создание нового
+            # если в кэше нет, берем из БД
+            if not topic_id:
+                topic_id = dialog.topic_id
+
+            if topic_id:
+                try:
+                    # проверяем, жив ли топик в Telegram (вызываем typing)
+                    await message.bot.send_chat_action(
+                        chat_id=settings.TG_ADMIN_GROUP_ID,
+                        action="typing",
+                        message_thread_id=int(topic_id)
+                    )
+                    # если успешно значит обновляем кэш, чтобы не дергать БД в следующий раз
+                    await set_cached_topic_id(user_id, topic_id)
+                except Exception:
+                    # если ошибка (топик удален вручную в ТГ), создаем новый
+                    is_new_topic_needed = True
+            else:
                 is_new_topic_needed = True
-        else:
-            is_new_topic_needed = True
 
-        if is_new_topic_needed:
-            try:
-                topic = await message.bot.create_forum_topic(
-                    chat_id=settings.TG_ADMIN_GROUP_ID,
-                    name=f"{dialog.first_name or ''} @{dialog.username or ''}"[:128]
-                )
-                dialog.topic_id = topic.message_thread_id
-                await update_dialog_topic(dialog.id, dialog.topic_id)
-            except Exception as e:
-                return await message.answer("Ошибка связи с администратором. Попробуйте позже.")
+            if is_new_topic_needed:
+                try:
+                    topic_name = f"{dialog.first_name or ''} @{dialog.username or ''}"[:128]
+                    topic = await message.bot.create_forum_topic(
+                        chat_id=settings.TG_ADMIN_GROUP_ID,
+                        name=topic_name
+                    )
+                    topic_id = topic.message_thread_id
+                    await update_dialog_topic(dialog.id, topic_id)
+                    await set_cached_topic_id(user_id, topic_id)
+                except Exception as e:
+                    return await message.answer("Ошибка связи с администратором. Попробуйте позже.")
+    except LockError:
+        return await message.answer("Ваше сообщение обрабатывается, пожалуйста, подождите...")
 
     # сохранение сообщения в БД
     await create_msg(dialog, message.text, is_from_user=True)
 
-    lot_url = f"{settings.CSRF_TRUSTED_ORIGINS[0]}/{dialog.current_lot.id}/"
-    lot_info = f"🖼 Предмет: [{dialog.current_lot.title}]({lot_url}) - {dialog.current_lot.price}₽\n" if dialog.current_lot else ""
+    # сообщения для админа
+    base_url = settings.CSRF_TRUSTED_ORIGINS[0].rstrip('/')
+    safe_name = html.escape(dialog.first_name or "Пользователь")
+    safe_username = html.escape(dialog.username or "")
+    safe_text = html.escape(message.text or "")
+    lot_info = ""
+    if dialog.current_lot:
+        lot_url = f"{base_url}/{dialog.current_lot.id}/"
+        safe_lot_title = html.escape(dialog.current_lot.title)
+        lot_info = f'🖼 Предмет: <a href="{lot_url}">{safe_lot_title}</a> - {dialog.current_lot.price}₽\n'
+
     text = (
-        f"🧑 {dialog.first_name or ''} @{dialog.username or ''}\n"
-        f"ID: {dialog.tg_user_id}\n{lot_info}\n💬 {message.text}"
+        f"🧑 <b>{safe_name}</b> @{safe_username}\n"
+        f"ID: <code>{dialog.tg_user_id}</code>\n{lot_info}\n💬 {safe_text}"
     )
 
+    reply_markup = None
     if is_new_topic_needed:
-        # добавление кнопки закрытия при создании топика
         builder = InlineKeyboardBuilder()
         builder.row(types.InlineKeyboardButton(
             text="✅ Завершить диалог",
-            callback_data=f"close_topic_{dialog.tg_user_id}")
+            callback_data=f"close_topic_{user_id}")
         )
-        await message.bot.send_message(
-            chat_id=settings.TG_ADMIN_GROUP_ID,
-            message_thread_id=dialog.topic_id,
-            text=text,
-            reply_markup=builder.as_markup(),
-            parse_mode="Markdown"
-        )
-    else:
-        # иначе пересылаем сообщение в существующий топик
-        await message.bot.send_message(
-            chat_id=settings.TG_ADMIN_GROUP_ID,
-            message_thread_id=dialog.topic_id,
-            text=text,
-            parse_mode="Markdown"
-        )
+        reply_markup = builder.as_markup()
+
+    await message.bot.send_message(
+        chat_id=settings.TG_ADMIN_GROUP_ID,
+        message_thread_id=int(topic_id),
+        text=text,
+        reply_markup=reply_markup,
+        parse_mode="HTML",
+        disable_web_page_preview=False
+    )
 
     await message.answer("Сообщение передано администратору 👍")
 
@@ -151,9 +186,12 @@ async def handle_admin_reply(message: types.Message):
     try:
         dialog = await sync_to_async(TelegramDialog.objects.get)(topic_id=message.message_thread_id)
         await create_msg(dialog, message.text, is_from_user=False)
-        await message.bot.send_message(dialog.tg_user_id, message.text)
+        await message.bot.send_message(dialog.tg_user_id, message.text, parse_mode="HTML")
     except TelegramDialog.DoesNotExist:
-        pass
+        try:
+            await message.bot.send_message(dialog.tg_user_id, message.text)
+        except:
+            pass
 
 
 async def handle_close_topic(callback: types.CallbackQuery):
@@ -161,7 +199,6 @@ async def handle_close_topic(callback: types.CallbackQuery):
     try:
         dialog = await get_dialog_with_lot(user_id)
         if dialog and dialog.topic_id:
-            # визуальное удаление топика
             try:
                 await callback.bot.delete_forum_topic(
                     chat_id=settings.TG_ADMIN_GROUP_ID,
@@ -170,7 +207,8 @@ async def handle_close_topic(callback: types.CallbackQuery):
             except Exception:
                 pass
 
-                # обнуляем в БД id диалога для присвоения нового в будущем
+            # очистка кэша в Redis и обнуление id топика в БД
+            await delete_cached_topic_id(user_id)
             await update_dialog_topic(dialog.id, None)
 
         await callback.answer("Диалог закрыт, топик удален", show_alert=True)
