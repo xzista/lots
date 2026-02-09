@@ -76,17 +76,18 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             set -e
-
+            
             echo "--- GO TO PROJECT ---"
-            cd /var/www/lots || {
+            if [ ! -d "/var/www/lots/.git" ]; then
               sudo mkdir -p /var/www/lots
               sudo chown $USER:$USER /var/www/lots
               git clone https://github.com/xzista/lots.git /var/www/lots
-              cd /var/www/lots
-            }
-                    
+            fi
+            cd /var/www/lots
+            
             echo "--- UPDATE CODE ---"
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
             
             echo "--- CREATE .env FILE ---"
             cat > .env << EOF
@@ -101,33 +102,35 @@ jobs:
             ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}
             CSRF_TRUSTED_ORIGINS=${{ secrets.CSRF_TRUSTED_ORIGINS }}
             TG_BOT_TOKEN=${{ secrets.TG_BOT_TOKEN }}
+            TG_ADMIN_ID=${{ secrets.TG_ADMIN_ID }}
             TG_ADMIN_GROUP_ID=${{ secrets.TG_ADMIN_GROUP_ID }}
             USE_HTTPS=False
             EOF
             
             echo "--- BUILD AND START CONTAINERS ---"
-            sudo docker compose -f docker-compose.yaml down || true
-            sudo docker compose -f docker-compose.yaml build --no-cache
-            sudo docker compose -f docker-compose.yaml up -d
+            sudo docker compose -f docker-compose.yaml up -d --build
             
             echo "--- WAIT FOR DATABASE ---"
-            sleep 20
-            
-            echo "--- CHECK CONTAINER LOGS ---"
-            sudo docker compose -f docker-compose.yaml logs web
+            n=0
+            until [ "$n" -ge 10 ]
+            do
+               sudo docker compose -f docker-compose.yaml exec -T db pg_isready -U ${{ secrets.POSTGRES_USER }} && break
+               n=$((n+1)) 
+               echo "Waiting for database... ($n/10)"
+               sleep 3
+            done
             
             echo "--- APPLY MIGRATIONS ---"
             sudo docker compose -f docker-compose.yaml exec -T web python manage.py migrate --noinput
             
             echo "--- COLLECT STATIC ---"
-            sudo docker compose exec -T web python manage.py collectstatic --noinput
+            sudo docker compose -f docker-compose.yaml exec -T web python manage.py collectstatic --noinput
             
             echo "--- CLEAN OLD IMAGES ---"
             sudo docker image prune -f
             
             echo "--- CHECK DEPLOYMENT ---"
-            sleep 15
-            curl -f http://localhost || echo "Service check failed but continuing..."
-            sudo docker compose ps
+            sleep 5
+            sudo docker compose -f docker-compose.yaml ps
             
             echo "--- DEPLOYMENT COMPLETE ---"
