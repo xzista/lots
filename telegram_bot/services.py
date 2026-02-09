@@ -61,7 +61,7 @@ async def handle_start(message: types.Message):
         lot = await get_lot_safe(lot_id)
         if lot:
             await set_dialog_lot(dialog.id, lot)
-            await message.answer(f"🖼 Лот: {lot.title}\n\nНапишите ваш вопрос:")
+            await message.answer(f"🖼 Предмет: {lot.title}\n\nНапишите ваш вопрос:")
             return
 
     await set_dialog_lot(dialog.id, None)
@@ -106,18 +106,18 @@ async def handle_message(message: types.Message):
             except Exception as e:
                 return await message.answer("Ошибка связи с администратором. Попробуйте позже.")
 
-    # 3. Сохраняем сообщение в БД (оно всегда привязано к одному dialog)
+    # сохранение сообщения в БД
     await create_msg(dialog, message.text, is_from_user=True)
 
-    # 4. Отправка в админ-группу
-    lot_info = f"🖼 Лот: {dialog.current_lot.title}\n" if dialog.current_lot else ""
+    lot_url = f"{settings.CSRF_TRUSTED_ORIGINS[0]}/{dialog.current_lot.id}/"
+    lot_info = f"🖼 Предмет: [{dialog.current_lot.title}]({lot_url}) - {dialog.current_lot.price}₽\n" if dialog.current_lot else ""
     text = (
         f"🧑 {dialog.first_name or ''} @{dialog.username or ''}\n"
-        f"ID: {dialog.tg_user_id}\n{lot_info}💬 {message.text}"
+        f"ID: {dialog.tg_user_id}\n{lot_info}\n💬 {message.text}"
     )
 
     if is_new_topic_needed:
-        # Если создали новый топик — добавляем кнопку закрытия
+        # добавление кнопки закрытия при создании топика
         builder = InlineKeyboardBuilder()
         builder.row(types.InlineKeyboardButton(
             text="✅ Завершить диалог",
@@ -127,14 +127,16 @@ async def handle_message(message: types.Message):
             chat_id=settings.TG_ADMIN_GROUP_ID,
             message_thread_id=dialog.topic_id,
             text=text,
-            reply_markup=builder.as_markup()
+            reply_markup=builder.as_markup(),
+            parse_mode="Markdown"
         )
     else:
-        # Просто пересылаем сообщение в существующий топик
+        # иначе пересылаем сообщение в существующий топик
         await message.bot.send_message(
             chat_id=settings.TG_ADMIN_GROUP_ID,
             message_thread_id=dialog.topic_id,
-            text=text
+            text=text,
+            parse_mode="Markdown"
         )
 
     await message.answer("Сообщение передано администратору 👍")
@@ -159,7 +161,7 @@ async def handle_close_topic(callback: types.CallbackQuery):
     try:
         dialog = await get_dialog_with_lot(user_id)
         if dialog and dialog.topic_id:
-            # 1. Удаляем визуально из Telegram
+            # визуальное удаление топика
             try:
                 await callback.bot.delete_forum_topic(
                     chat_id=settings.TG_ADMIN_GROUP_ID,
@@ -168,7 +170,7 @@ async def handle_close_topic(callback: types.CallbackQuery):
             except Exception:
                 pass
 
-                # 2. Обнуляем в БД. История сообщений в TelegramMessage НЕ УДАЛЯЕТСЯ.
+                # обнуляем в БД id диалога для присвоения нового в будущем
             await update_dialog_topic(dialog.id, None)
 
         await callback.answer("Диалог закрыт, топик удален", show_alert=True)
