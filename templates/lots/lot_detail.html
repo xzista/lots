@@ -63,9 +63,16 @@
         {% endfor %}
       </div>
       {% endif %}
+      <a href="https://t.me/magiyastarinybot?start=lot_{{ lot.id }}"
+         class="btn btn-outline-dark mt-3"
+         target="_blank">
+        Связаться по этому предмету
+      </a>
 
-      <button onclick="location.href='{% url 'lots:lot_list' %}'"
-              class="btn btn-outline-dark mt-3">Назад</button>
+      <a href="{% url 'lots:lot_list' %}"
+         class="btn btn-outline-dark mt-3">
+        Назад
+      </a>
     </div>
   </div>
 
