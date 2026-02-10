@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from pillow_heif import register_heif_opener
 
 load_dotenv()
 
@@ -123,3 +124,5 @@ TG_ADMIN_ID = int(os.getenv("TG_ADMIN_ID", 0))
 TG_ADMIN_GROUP_ID = int(os.getenv("TG_ADMIN_GROUP_ID", 0))
 
 REDIS_URL = os.getenv("REDIS_URL")
+
+register_heif_opener()
