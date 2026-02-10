@@ -17,6 +17,7 @@ django-select2 = "^8.4.3"
 django-cleanup = "^9.0.0"
 aiogram = "^3.24.0"
 redis = "^7.1.0"
+pillow-heif = "^1.2.0"
 
 [tool.poetry.group.dev.dependencies]
 python-dotenv = "^1.2.1"
