@@ -15,24 +15,27 @@
 
         <!-- Большое главное фото -->
         {% if lot.main_image %}
-        <a href="{{ lot.main_image.url }}"
-           class="gallery-main"
-           data-lg-size="2560-2560"
-           style="display: block; overflow: hidden; border-radius: 8px;">
-          <img src="{{ lot.preview_image.url|default:lot.main_image.url }}"
-               alt="{{ lot.title }}"
-               style="width: 100%; height: auto; max-height: 500px; object-fit: contain; display: block;">
-        </a>
+        <div style="text-align: center; line-height: 0;">
+            <a href="{{ lot.main_image.url }}"
+               class="gallery-main"
+               data-lg-size="{{ lot.main_image.width }}-{{ lot.main_image.height }}"
+               style="display: inline-block; line-height: 0; overflow: hidden; border-radius: 8px;">
+              <img src="{{ lot.preview_image.url|default:lot.main_image.url }}"
+                   alt="{{ lot.title }}"
+                   style="width: auto; max-width: 100%; height: auto; max-height: 500px; display: block; margin: 0 auto;">
+            </a>
+        </div>
         {% endif %}
+
         {% if lot.images.all %}
         <div class="d-flex flex-wrap gap-2 mt-3">
           {% for img in lot.images.all %}
           <a href="{{ img.image.url }}"
              class="gallery-thumb"
-             data-lg-size="2560-2560">
+             data-lg-size="{{ img.image.width }}-{{ img.image.height }}">
             <img src="{{ img.preview_image.url|default:img.image.url }}"
                  alt="{{ lot.title }} - фото {{ forloop.counter }}"
-                 style="width: 100px; height: 100px; object-fit: cover; border-radius: 6px;">
+                 style="width: 100px; height: 100px; object-fit: cover; border-radius: 6px; display: block;">
           </a>
           {% endfor %}
         </div>
@@ -60,16 +63,17 @@
         {% endfor %}
       </div>
       {% endif %}
+
       <a href="https://t.me/magiyastarinybot?start=lot_{{ lot.id }}"
          class="btn btn-outline-dark mt-3"
          target="_blank">
         Связаться по этому предмету
       </a>
 
-      <a href="{% url 'lots:lot_list' %}"
-         class="btn btn-outline-dark mt-3">
+      <button onclick="history.length > 1 ? history.back() : window.location.href='{% url 'lots:lot_list' %}';"
+              class="btn btn-outline-dark mt-3">
         Назад
-      </a>
+      </button>
     </div>
   </div>
 
@@ -77,71 +81,70 @@
 {% endblock %}
 
 {% block extra_js %}
+<style>
+  .lg-outer .lg-img-wrap {
+      padding: 0 10px !important;
+  }
+
+  .lg-object.lg-image {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  .gallery-main, .gallery-thumb {
+    cursor: pointer !important;
+    display: block;
+    line-height: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .gallery-main img, .gallery-thumb img {
+    transition: transform 0.2s ease-in-out, opacity 0.3s ease;
+  }
+
+  .gallery-main:hover img {
+    transform: scale(1.01);
+  }
+</style>
+
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+  const galleryElement = document.getElementById('lightgallery');
 
-  // Инициализация LightGallery
-  const gallery = lightGallery(document.getElementById('lightgallery'), {
-    selector: 'a[href$=".jpg"], a[href$=".jpeg"], a[href$=".png"], a[href$=".gif"], a[href$=".webp"]',
+  const isMobile = window.innerWidth < 768;
+
+  const gallery = lightGallery(galleryElement, {
+    selector: '.gallery-main, .gallery-thumb',
     plugins: [lgZoom, lgThumbnail],
-    speed: 300,
+
+    speed: 350,
+    mode: 'lg-slide',
+
     zoom: true,
-    thumbnail: true,
+    enableZoomAfter: 100,
+    allowMediaOverlap: false,
+
+    zoomFromOrigin: !isMobile,
+
+    getBoundBox: true,
     download: false,
 
-    // Улучшенные настройки для мобильных устройств
     mobileSettings: {
       controls: true,
       showCloseIcon: true,
       download: false
-    },
-
-    // Настройки для десктопов
-    controls: true,
-    closeOnTap: true,
-    hideBarsDelay: 3000,
-
-    // Настройки масштабирования
-    scale: 1,
-    actualSize: false,
-    showZoomInOutIcons: true,
-    actualSizeIcons: {
-      zoomIn: 'lg-zoom-in',
-      zoomOut: 'lg-zoom-out'
-    },
-
-    // Плавная анимация
-    mode: 'lg-fade',
-    cssEasing: 'cubic-bezier(0.25, 0, 0.25, 1)',
-
-    // Предотвращение растягивания
-    preload: 1,
-    appendSubHtmlTo: '.lg-item'
+    }
   });
 
-  // Предотвращаем скачок изображения при загрузке
-  const images = document.querySelectorAll('#lightgallery img');
+  const images = galleryElement.querySelectorAll('img');
   images.forEach(img => {
-    // Устанавливаем фиксированные размеры для предотвращения скачков
-    if (!img.style.width) {
-      img.style.width = '100%';
-    }
-    if (!img.style.height) {
-      img.style.height = 'auto';
-    }
-
-    // Предзагрузка изображения
     if (img.complete) {
-      img.style.opacity = '1';
+        img.style.opacity = '1';
     } else {
-      img.style.opacity = '0';
-      img.style.transition = 'opacity 0.3s ease';
-      img.onload = function() {
-        this.style.opacity = '1';
-      };
+        img.style.opacity = '0';
+        img.onload = function() { this.style.opacity = '1'; };
     }
   });
-
 });
 </script>
 {% endblock %}
