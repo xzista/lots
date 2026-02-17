@@ -129,18 +129,17 @@
 <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/plugins/thumbnail/lg-thumbnail.umd.min.js"></script>
 
 <script>
-  (function(){
+  document.addEventListener("DOMContentLoaded", function() {
     const body = document.body;
     const themeCheckbox = document.getElementById('theme');
+    if (!themeCheckbox) return; // Защита от ошибок, если кнопки нет
 
-    // При загрузке страницы
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
       body.classList.add('dark');
       themeCheckbox.checked = true;
     }
 
-    // Слушаем переключатель
     themeCheckbox.addEventListener('change', function() {
       if (this.checked) {
         body.classList.add('dark');
@@ -150,7 +149,7 @@
         localStorage.setItem('theme', 'light');
       }
     });
-  })();
+  });
 </script>
 
 {% block extra_js %}{% endblock %}
