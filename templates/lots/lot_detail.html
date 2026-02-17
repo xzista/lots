@@ -32,8 +32,7 @@
           {% for img in lot.images.all %}
           <a href="{{ img.image.url }}"
              class="gallery-thumb"
-             data-lg-size="{{ img.image.width }}-{{ img.image.height }}"
-             style="display: block; line-height: 0;">
+             data-lg-size="{{ img.image.width }}-{{ img.image.height }}">
             <img src="{{ img.preview_image.url|default:img.image.url }}"
                  alt="{{ lot.title }} - фото {{ forloop.counter }}"
                  style="width: 100px; height: 100px; object-fit: cover; border-radius: 6px; display: block;">
@@ -71,7 +70,8 @@
         Связаться по этому предмету
       </a>
 
-      <button onclick="history.back()" class="btn btn-outline-dark mt-3">
+      <button onclick="history.length > 1 ? history.back() : window.location.href='{% url 'lots:lot_list' %}';"
+              class="btn btn-outline-dark mt-3">
         Назад
       </button>
     </div>
@@ -83,12 +83,19 @@
 {% block extra_js %}
 <style>
   .lg-outer .lg-img-wrap {
-      padding: 0 !important;
+      padding: 0 10px !important;
   }
 
-  .lg-object {
-      object-fit: contain !important;
-      transition: opacity 0.3s ease !important;
+  .lg-object.lg-image {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  .gallery-main, .gallery-thumb {
+    cursor: pointer !important;
+    display: block;
+    line-height: 0;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .gallery-main img, .gallery-thumb img {
@@ -104,35 +111,39 @@
 document.addEventListener("DOMContentLoaded", function() {
   const galleryElement = document.getElementById('lightgallery');
 
+  const isMobile = window.innerWidth < 768;
+
   const gallery = lightGallery(galleryElement, {
     selector: '.gallery-main, .gallery-thumb',
     plugins: [lgZoom, lgThumbnail],
 
     speed: 350,
-    zoom: true,
-    actualSize: true,
-    scale: 1,
+    mode: 'lg-slide',
 
-    // Анимация из точки нажатия
-    zoomFromOrigin: true,
-    allowMediaOverlap: true,
+    zoom: true,
+    enableZoomAfter: 100,
+    allowMediaOverlap: false,
+
+    zoomFromOrigin: !isMobile,
 
     getBoundBox: true,
-
-    mode: 'lg-slide',
-    cssEasing: 'cubic-bezier(0.25, 0, 0.25, 1)',
-
     download: false,
+
     mobileSettings: {
       controls: true,
-      showCloseIcon: true
+      showCloseIcon: true,
+      download: false
     }
   });
 
   const images = galleryElement.querySelectorAll('img');
   images.forEach(img => {
-    img.style.opacity = img.complete ? '1' : '0';
-    img.onload = function() { this.style.opacity = '1'; };
+    if (img.complete) {
+        img.style.opacity = '1';
+    } else {
+        img.style.opacity = '0';
+        img.onload = function() { this.style.opacity = '1'; };
+    }
   });
 });
 </script>
