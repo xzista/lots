@@ -16,6 +16,7 @@ class LotListView(ListView):
         q = self.request.GET.get("q", "").strip()
         tag = self.request.GET.get("tag", "").strip().lower()
         category = self.request.GET.get("category", "").strip()
+        sort = self.request.GET.get("sort", "-created_at")
 
         # фильтры
         if q:
@@ -32,6 +33,15 @@ class LotListView(ListView):
         if category:
             qs = qs.filter(category__iexact=category)
 
+        # логика сортировки
+        if sort == "price_asc":
+            qs = qs.order_by("price")
+        elif sort == "price_desc":
+            qs = qs.order_by("-price")
+        elif sort == "oldest":
+            qs = qs.order_by("created_at")
+        else:
+            qs = qs.order_by("-created_at")
         return qs
 
     def get_context_data(self, **kwargs):
@@ -41,8 +51,7 @@ class LotListView(ListView):
         context["q"] = self.request.GET.get("q", "").strip()
         context["selected_tag"] = self.request.GET.get("tag", "").strip()
         context["selected_category"] = self.request.GET.get("category", "").strip()
-
-        context["page_obj"] = context.get("page_obj")
+        context["current_sort"] = self.request.GET.get("sort", "-created_at")
 
         return context
 

@@ -32,4 +32,5 @@ def search_form_processor(request):
         "search_q": request.GET.get("q", ""),
         "search_tag": request.GET.get("tag", ""),
         "search_category": request.GET.get("category", ""),
+        "current_sort": request.GET.get("sort", ""),
     }
