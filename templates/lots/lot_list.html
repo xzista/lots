@@ -7,16 +7,45 @@
 <style>
   .lot-card { transition: transform .25s ease, box-shadow .25s ease; }
   .lot-card:hover { transform: translateY(-6px); box-shadow: 0 10px 26px rgba(0,0,0,0.18); }
+  .antique-input {
+    border: 1px solid #343a40;
+    border-radius: 4px;
+    background-color: #fff;
+    color: #343a40;
+  }
+  body.dark .antique-input {background-color: #2c2c2c; color: #e0e0e0; border-color: #555; }
+  body.dark .form-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e0e0e0' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  }
+  body.dark .text-muted {color: #aaa !important; }
 </style>
 
-<div class="row mb-3">
-  <div class="col-md-9">
+<!-- Блок фильтрации и поиска -->
+<div class="row mb-3 align-items-center g-3">
+  <div class="col-md-9 d-flex align-items-center">
+    <form method="get" class="d-flex align-items-center gap-2">
+      {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+      {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+      {% if selected_tag %}<input type="hidden" name="tag" value="{{ selected_tag }}">{% endif %}
+
+      <label for="sort" class="text-muted small d-none d-sm-inline" style="white-space: nowrap;">Сортировать:</label>
+      <select name="sort" id="sort" class="form-select form-select-sm antique-input" onchange="this.form.submit()" style="width: auto; min-width: 110px;">
+        <option value="-created_at" {% if current_sort == "-created_at" %}selected{% elif not current_sort %}selected{% endif %}>Новые</option>
+       <!-- <option value="oldest" {% if current_sort == "oldest" %}selected{% endif %}>Старые</option> -->
+        <option value="price_asc" {% if current_sort == "price_asc" %}selected{% endif %}>По возрастанию цены</option>
+        <option value="price_desc" {% if current_sort == "price_desc" %}selected{% endif %}>По убыванию цены</option>
+      </select>
+    </form>
   </div>
 
   <div class="col-md-3">
     <form method="get" class="d-flex" role="search" aria-label="Поиск лотов">
-      <input class="form-control me-1" name="q" value="{{ q }}" placeholder="Поиск..." />
-      <button class="btn btn-outline-dark" type="submit">Найти</button>
+      {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+      {% if selected_tag %}<input type="hidden" name="tag" value="{{ selected_tag }}">{% endif %}
+      {% if current_sort %}<input type="hidden" name="sort" value="{{ current_sort }}">{% endif %}
+
+      <input class="form-control form-control-sm me-1 antique-input" name="q" value="{{ q }}" placeholder="Поиск..." />
+      <button class="btn btn-sm btn-outline-dark" type="submit">Найти</button>
     </form>
   </div>
 </div>
@@ -85,7 +114,9 @@
 <nav class="mt-4" aria-label="Пагинация">
   <ul class="pagination">
     {% if page_obj.has_previous %}
-      <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}">←</a></li>
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_tag %}&tag={{ selected_tag }}{% endif %}">←</a>
+      </li>
     {% else %}
       <li class="page-item disabled"><span class="page-link">←</span></li>
     {% endif %}
@@ -93,7 +124,9 @@
     <li class="page-item disabled"><span class="page-link">Стр. {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
 
     {% if page_obj.has_next %}
-      <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}">→</a></li>
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_tag %}&tag={{ selected_tag }}{% endif %}">→</a>
+      </li>
     {% else %}
       <li class="page-item disabled"><span class="page-link">→</span></li>
     {% endif %}
